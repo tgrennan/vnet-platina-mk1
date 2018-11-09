@@ -15,11 +15,13 @@ import (
 
 	"github.com/platinasystems/fe1"
 	fe1a "github.com/platinasystems/firmware-fe1a"
+	"github.com/platinasystems/redis"
 	vnetfe1 "github.com/platinasystems/vnet/devices/ethernet/switch/fe1"
 	yaml "gopkg.in/yaml.v2"
 )
 
 func main() {
+	redis.DefaultHash = "platina-mk1"
 	if err := Main(os.Args[1:]...); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
