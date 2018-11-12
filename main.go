@@ -2,10 +2,10 @@
 // Use of this source code is governed by the GPL-2 license described in the
 // LICENSE file.
 
-// This is a goes plugin containing Platina's Mk1 TOR driver daemon.
+// This is the XETH control daemon for Platina's Mk1 TOR switch.
 // Build it with,
-//	go build -buildmode=plugin
-//	zip plugins vnet-platina-mk1.so
+//	go build
+//	zip drivers vnet-platina-mk1
 package main
 
 import (
@@ -21,35 +21,40 @@ import (
 )
 
 func main() {
+	var err error
+	f := mk1Main
+	stub := func() error { return nil }
+
 	redis.DefaultHash = "platina-mk1"
-	if err := Main(os.Args[1:]...); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
-func Main(args ...string) error {
-	for i, arg := range args {
-		switch strings.TrimLeft(arg, "-") {
-		case "version":
-			return marshalOut(Versions())
-		case "copyright", "license":
-			return marshalOut(Licenses())
-		case "patents":
-			return marshalOut(Patents())
-			return nil
-		case "h", "help":
-			fmt.Println("vnetd [version, license, patents]")
-			return nil
-		default:
-			return fmt.Errorf("%q unknown", args[i])
-		}
-	}
-
 	vnetfe1.AddPlatform = fe1.AddPlatform
 	vnetfe1.Init = fe1.Init
 
-	return mk1Main()
+	for _, arg := range os.Args[1:] {
+		switch strings.TrimLeft(arg, "-") {
+		case "version":
+			f = stub
+			err = marshalOut(Versions())
+		case "copyright", "license":
+			f = stub
+			err = marshalOut(Licenses())
+		case "patents":
+			f = stub
+			err = marshalOut(Patents())
+		case "h", "help":
+			fmt.Println("vnetd [version, license, patents]")
+			return
+		default:
+			err = fmt.Errorf("%q unknown", arg)
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
+	if err = f(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 func marshalOut(m map[string]string) error {
