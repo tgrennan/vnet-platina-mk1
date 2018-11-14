@@ -6,6 +6,7 @@ package main
 
 import (
 	"github.com/platinasystems/vnet"
+	"github.com/platinasystems/xeth"
 )
 
 type spList []uint
@@ -13,7 +14,8 @@ type spList []uint
 func subportsMatchingPort(targetport uint) (numsubports uint, subportlist spList) {
 	subportlist = []uint{0xf, 0xf, 0xf, 0xf}
 	for _, pe := range vnet.Ports {
-		if pe.Portindex == int16(targetport) {
+		if pe.Devtype == xeth.XETH_DEVTYPE_XETH_PORT &&
+			pe.Portindex == int16(targetport) {
 			subportlist[numsubports] = uint(pe.Subportindex)
 			numsubports++
 		}

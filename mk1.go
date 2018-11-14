@@ -143,7 +143,7 @@ func mk1Main() error {
 			entry, found := vnet.Ports[ifname]
 			if found {
 				entry.Flags = xeth.EthtoolPrivFlags(msg.Flags)
-				dbgSvi.Log(ifname, entry.Flags)
+				dbgSvi.Logf("%v flags %v", ifname, entry.Flags)
 			}
 		case xeth.XETH_MSG_KIND_ETHTOOL_SETTINGS:
 			msg := (*xeth.MsgEthtoolSettings)(ptr)
@@ -152,7 +152,7 @@ func mk1Main() error {
 			entry, found := vnet.Ports[ifname]
 			if found {
 				entry.Speed = xeth.Mbps(msg.Speed)
-				dbgSvi.Log(ifname, entry.Speed)
+				dbgSvi.Logf("%v speed %v", ifname, entry.Speed)
 			}
 		case xeth.XETH_MSG_KIND_IFINFO:
 			var punt_index uint8
@@ -184,11 +184,6 @@ func mk1Main() error {
 	})
 	if err != nil {
 		return err
-	}
-
-	for ifname, entry := range vnet.Ports {
-		dbgSvi.Log(ifname, "flags", entry.Flags)
-		dbgSvi.Log(ifname, "speed", entry.Speed)
 	}
 
 	mk1.eventPool.New = mk1.newEvent
@@ -362,7 +357,7 @@ func (mk1 *Mk1) parsePortConfig() (err error) {
 			pp.Name = ifname
 			pp.Portindex = entry.Portindex
 			pp.Subportindex = entry.Subportindex
-			pp.Vid = ethernet.VlanTag(entry.Vid)
+			pp.PortVid = ethernet.VlanTag(entry.PortVid)
 			pp.PuntIndex = entry.PuntIndex
 			pp.Speed = fmt.Sprintf("%dg", entry.Speed/1000)
 			// Need some more help here from ethtool to disambiguate
@@ -380,6 +375,7 @@ func (mk1 *Mk1) parsePortConfig() (err error) {
 			case 25000, 20000, 10000, 1000:
 				pp.Lanes = 1
 			case 0: // need to calculate autoneg defaults
+				dbgSvi.Log("port-provision", pp.Name)
 				pp.Lanes =
 					mk1.getDefaultLanes(uint(pp.Portindex),
 						uint(pp.Subportindex))
@@ -406,50 +402,6 @@ func (mk1 *Mk1) parsePortConfig() (err error) {
 			}
 
 			plat.PortConfig.Ports = append(plat.PortConfig.Ports, pp)
-		}
-	}
-	return
-}
-
-func (mk1 *Mk1) parseBridgeConfig() (err error) {
-	plat := &mk1.platform
-
-	if plat.BridgeConfig.Bridges == nil {
-		plat.BridgeConfig.Bridges =
-			make(map[ethernet.VlanTag]*vnetfe1.BridgeProvision)
-	}
-
-	// for each bridge entry, create bridge config
-	for vid, entry := range vnet.Bridges {
-		bp, found := plat.BridgeConfig.Bridges[ethernet.VlanTag(vid)]
-		if !found {
-			bp = new(vnetfe1.BridgeProvision)
-			plat.BridgeConfig.Bridges[ethernet.VlanTag(vid)] = bp
-		}
-		bp.PuntIndex = entry.PuntIndex
-		bp.Addr = entry.Addr
-		dbgSvi.Log("parse bridge", vid)
-	}
-
-	// for each bridgemember entry, add to pbm or ubm of matching bridge config
-	for ifname, entry := range vnet.BridgeMembers {
-		bp, found := plat.BridgeConfig.Bridges[ethernet.VlanTag(entry.Vid)]
-		if found {
-			if entry.IsTagged {
-				bp.TaggedPortVids =
-					append(bp.TaggedPortVids,
-						ethernet.VlanTag(entry.PortVid))
-			} else {
-				bp.UntaggedPortVids =
-					append(bp.UntaggedPortVids,
-						ethernet.VlanTag(entry.PortVid))
-			}
-			dbgSvi.Log("bridgemember", ifname,
-				"added to vlan", entry.Vid)
-			dbgSvi.Logf("bridgemember %+v", bp)
-		} else {
-			dbgSvi.Log("bridgemember", ifname, "ignored, vlan",
-				entry.Vid, "not found")
 		}
 	}
 	return
@@ -553,7 +505,6 @@ func (mk1 *Mk1) setup() error {
 
 	// Get initial port config from platina-mk1
 	mk1.parsePortConfig()
-	mk1.parseBridgeConfig()
 
 	return vnetmk1.PlatformInit(&mk1.vnet, &mk1.platform)
 }
