@@ -106,7 +106,7 @@ func mk1Main() error {
 		go mk1.gopublishHf()
 	}
 
-	err = redis.Assign(redis.DefaultHash+":vnet.", "vnetd", "Info")
+	err = redis.Assign(redis.DefaultHash+":vnet.", "vnetd", "Mk1")
 	if err != nil {
 		return err
 	}
