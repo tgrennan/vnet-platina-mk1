@@ -35,19 +35,18 @@ import (
 const chanDepth = 1 << 16
 
 type Mk1 struct {
-	vnet       vnet.Vnet
-	platform   vnetfe1.Platform
-	eventPool  sync.Pool
-	poller     ifStatsPoller
-	fastPoller fastIfStatsPoller
-	pub        *publisher.Publisher
-	// producer	*kafka.Producer
+	vnet      vnet.Vnet
+	platform  vnetfe1.Platform
+	eventPool sync.Pool
+	poller    ifStatsPoller
+	pub       *publisher.Publisher
 
 	// Enable publish of Non-unix (e.g. non-tuntap) interfaces.
 	// This will include all vnet interfaces.
 	unixInterfacesOnly bool
 
 	prevHwIfConfig map[string]*hwIfConfig
+	hfPoller       HfInfo
 }
 
 type hwIfConfig struct {
@@ -99,12 +98,6 @@ func mk1Main() error {
 	mk1.poller.pubch = make(chan string, chanDepth)
 	defer close(mk1.poller.pubch)
 	go mk1.gopublish()
-
-	if false {
-		mk1.fastPoller.pubch = make(chan string)
-		defer close(mk1.fastPoller.pubch)
-		go mk1.gopublishHf()
-	}
 
 	err = redis.Assign(redis.DefaultHash+":vnet.", "vnetd", "Mk1")
 	if err != nil {
@@ -172,8 +165,7 @@ func mk1Main() error {
 				fallthrough
 			case xeth.XETH_DEVTYPE_XETH_PORT:
 				err = unix.ProcessInterfaceInfo((*xeth.MsgIfinfo)(ptr), vnet.PreVnetd, nil, punt_index)
-			case xeth.XETH_DEVTYPE_LINUX_UNKNOWN:
-				// FIXME
+			case xeth.XETH_DEVTYPE_LINUX_UNKNOWN: // FIXME
 			}
 		case xeth.XETH_MSG_KIND_IFA:
 			err = unix.ProcessInterfaceAddr((*xeth.MsgIfa)(ptr), vnet.PreVnetd, nil)
@@ -242,17 +234,9 @@ func (mk1 *Mk1) Hset(args args.Hset, reply *reply.Hset) error {
 }
 
 func (mk1 *Mk1) init() {
-	const (
-		defaultPollInterval             = 5
-		defaultFastPollIntervalMilliSec = 200
-	)
 	mk1.poller.mk1 = mk1
-	mk1.fastPoller.mk1 = mk1
 	mk1.poller.addEvent(0)
-	mk1.fastPoller.pollInterval = defaultFastPollIntervalMilliSec
-	mk1.fastPoller.addEvent(0)
 	mk1.poller.pollInterval = defaultPollInterval
-	mk1.fastPoller.hostname, _ = os.Hostname()
 	mk1.pubHwIfConfig()
 	mk1.set("ready", "true", true)
 	mk1.poller.pubch <- fmt.Sprint("poll.max-channel-depth: ", chanDepth)
@@ -260,6 +244,7 @@ func (mk1 *Mk1) init() {
 	mk1.poller.pubch <- fmt.Sprint("pollInterval.msec: ",
 		defaultFastPollIntervalMilliSec)
 	mk1.poller.pubch <- fmt.Sprint("kafka-broker: ", "")
+	mk1.hfPoller.Init(mk1)
 }
 
 func (mk1 *Mk1) newEvent() interface{} {
@@ -580,52 +565,4 @@ func (mk1 *Mk1) gopublish() {
 	for s := range mk1.poller.pubch {
 		mk1.pub.Print("vnet.", s)
 	}
-}
-
-func (mk1 *Mk1) gopublishHf() {
-	topic := "hf-counters"
-	for s := range mk1.fastPoller.pubch {
-		_ = s
-		_ = topic
-		/* FIXME
-		mk1.producer.ProduceChannel() <- &kafka.Message{
-			TopicPartition: kafka.TopicPartition{
-				Topic:     &topic,
-				Partition: kafka.PartitionAny,
-			},
-			Value: []byte(s),
-		}
-		mk1.fastPoller.msgCount++
-		*/
-	}
-}
-
-func (mk1 *Mk1) initProducer(broker string) {
-	/* FIXME
-	var err error
-	if mk1.producer != nil {
-		mk1.producer.Close()
-	}
-	mk1.producer, err = kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": broker,
-	})
-	if err != nil {
-		fmt.Errorf("error while creating producer: %v", err)
-	} else {
-		go func() {
-			for e := range i.producer.Events() {
-				switch ev := e.(type) {
-				case *kafka.Message:
-					m := ev
-					if m.TopicPartition.Error != nil {
-						fmt.Errorf("Delivery of msg to topic %s [%d] at offset %v failed: %v \n",
-							*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset, m.TopicPartition.Error)
-					}
-				default:
-					fmt.Printf("Ignored event: %s\n", ev)
-				}
-			}
-		}()
-	}
-	*/
 }

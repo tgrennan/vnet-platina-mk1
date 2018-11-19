@@ -6,12 +6,16 @@ package main
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/platinasystems/vnet"
 	"github.com/platinasystems/xeth"
+)
+
+const (
+	defaultPollInterval             = 5
+	defaultFastPollIntervalMilliSec = 200
 )
 
 // One per each hw/sw interface from vnet.
@@ -31,28 +35,6 @@ func (i *ifStatsPollerInterface) update(counter string, value uint64) (updated b
 	} else {
 		updated = true
 		i.lastValues[counter] = value
-	}
-	return
-}
-func (i *ifStatsPollerInterface) updateHf(counter string, value uint64) (delta uint64, updated bool) {
-	if i.hfLastValues == nil {
-		i.hfLastValues = make(map[string]uint64)
-	}
-	portregex := regexp.MustCompile(`(packets|bytes) *`)
-	if v, ok := i.hfLastValues[counter]; ok {
-		if updated = v != value; updated {
-			i.hfLastValues[counter] = value
-			if portregex.MatchString(counter) {
-				if value > v {
-					delta = value - v
-				}
-			} else {
-				delta = value
-			}
-		}
-	} else {
-		updated = true
-		i.hfLastValues[counter] = value
 	}
 	return
 }
@@ -155,53 +137,5 @@ func (p *ifStatsPoller) EventAction() {
 		}
 	})
 
-	p.sequence++
-}
-
-type fastIfStatsPoller struct {
-	vnet.Event
-	mk1          *Mk1
-	sequence     uint
-	hwInterfaces ifStatsPollerInterfaceVec
-	swInterfaces ifStatsPollerInterfaceVec
-	pollInterval float64 // pollInterval in milliseconds
-	pubch        chan string
-	msgCount     uint64
-	hostname     string
-}
-
-func (p *fastIfStatsPoller) publish(data map[string]string) {
-	for k, v := range data {
-		p.pubch <- fmt.Sprintf("%s,%d,%s,%s", p.hostname, time.Now().UnixNano()/1000000, k, v)
-	}
-}
-
-func (p *fastIfStatsPoller) addEvent(dt float64) {
-	p.mk1.vnet.SignalEventAfter(p, dt)
-}
-
-func (p *fastIfStatsPoller) String() string {
-	return fmt.Sprintf("redis stats poller sequence %d", p.sequence)
-}
-
-func (p *fastIfStatsPoller) EventAction() {
-	// Schedule next event in 200 milliseconds; do before fetching counters so that time interval is accurate.
-	//p.addEvent(p.pollInterval / 1000)
-
-	// Publish all sw/hw interface counters even with zero values for first poll.
-	// This was all possible counters have valid values in redis.
-	// Otherwise only publish to redis when counter values change.
-	var c = make(map[string]string)
-	p.mk1.vnet.ForeachHighFreqHwIfCounter(true,
-		p.mk1.unixInterfacesOnly,
-		func(hi vnet.Hi, counter string, value uint64) {
-			ifname := hi.Name(&p.mk1.vnet)
-			p.hwInterfaces.Validate(uint(hi))
-			delta, _ := p.hwInterfaces[hi].updateHf(counter, value)
-			c[ifname] = c[ifname] + fmt.Sprint(delta) + ","
-		})
-	//if p.mk1.producer != nil{
-	//	p.publish(c)
-	//}
 	p.sequence++
 }

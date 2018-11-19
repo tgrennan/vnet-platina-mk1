@@ -99,12 +99,12 @@ func (e *event) EventAction() {
 		if itv < 1 {
 			e.err <- fmt.Errorf("pollInterval.msec must be 1 millisecond or longer")
 		} else {
-			e.mk1.fastPoller.pollInterval = itv
+			e.mk1.hfPoller.setPollInterval(itv)
 			e.newValue <- fmt.Sprintf("%f", itv)
 			e.err <- nil
 		}
 	case e.in.Parse("kafka-broker %s", &addr):
-		e.mk1.initProducer(addr)
+		e.mk1.hfPoller.initProducer(addr)
 		e.newValue <- fmt.Sprintf("%s", addr)
 		e.err <- nil
 	default:
