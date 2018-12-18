@@ -107,6 +107,14 @@ func (e *event) EventAction() {
 		e.mk1.initProducer(addr)
 		e.newValue <- fmt.Sprintf("%s", addr)
 		e.err <- nil
+	case e.in.Parse("unresolved-arpInterval %f", &itv):
+		if itv < 1 {
+			e.err <- fmt.Errorf("unresolvedArpInterval must be 1 second or longer")
+		} else {
+			e.mk1.unresolvedArper.pollInterval = itv
+			e.newValue <- fmt.Sprintf("%f", itv)
+			e.err <- nil
+		}
 	default:
 		e.err <- fmt.Errorf("can't set %s to %v", e.key, e.value)
 	}

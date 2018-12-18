@@ -35,12 +35,13 @@ import (
 const chanDepth = 1 << 16
 
 type Mk1 struct {
-	vnet       vnet.Vnet
-	platform   vnetfe1.Platform
-	eventPool  sync.Pool
-	poller     ifStatsPoller
-	fastPoller fastIfStatsPoller
-	pub        *publisher.Publisher
+	vnet            vnet.Vnet
+	platform        vnetfe1.Platform
+	eventPool       sync.Pool
+	poller          ifStatsPoller
+	fastPoller      fastIfStatsPoller
+	unresolvedArper unresolvedArper
+	pub             *publisher.Publisher
 	// producer	*kafka.Producer
 
 	// Enable publish of Non-unix (e.g. non-tuntap) interfaces.
@@ -245,21 +246,30 @@ func (mk1 *Mk1) init() {
 	const (
 		defaultPollInterval             = 5
 		defaultFastPollIntervalMilliSec = 200
+		defaultUnresolvedArpInterval    = 1
 	)
 	mk1.poller.mk1 = mk1
 	mk1.fastPoller.mk1 = mk1
+	mk1.unresolvedArper.mk1 = mk1
+
 	mk1.poller.addEvent(0)
-	mk1.fastPoller.pollInterval = defaultFastPollIntervalMilliSec
 	mk1.fastPoller.addEvent(0)
+	mk1.unresolvedArper.addEvent(0)
+
 	mk1.poller.pollInterval = defaultPollInterval
+	mk1.fastPoller.pollInterval = defaultFastPollIntervalMilliSec
+	mk1.unresolvedArper.pollInterval = defaultUnresolvedArpInterval
+
 	mk1.fastPoller.hostname, _ = os.Hostname()
 	mk1.pubHwIfConfig()
 	mk1.set("ready", "true", true)
+
 	mk1.poller.pubch <- fmt.Sprint("poll.max-channel-depth: ", chanDepth)
 	mk1.poller.pubch <- fmt.Sprint("pollInterval: ", defaultPollInterval)
 	mk1.poller.pubch <- fmt.Sprint("pollInterval.msec: ",
 		defaultFastPollIntervalMilliSec)
 	mk1.poller.pubch <- fmt.Sprint("kafka-broker: ", "")
+	mk1.poller.pubch <- fmt.Sprint("unresolved-arpInterval: ", defaultUnresolvedArpInterval)
 }
 
 func (mk1 *Mk1) newEvent() interface{} {
