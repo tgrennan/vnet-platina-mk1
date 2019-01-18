@@ -63,20 +63,32 @@ func mk1Main() error {
 
 	var mk1 Mk1
 	var in parse.Input
+	var eth1, eth2 *net.Interface
+	var err error
 
 	xeth.EthtoolPrivFlagNames = flags
 	xeth.EthtoolStatNames = stats
 
-	eth1, err := net.InterfaceByName("eth1")
-	if err != nil {
-		return err
-	}
-	eth2, err := net.InterfaceByName("eth2")
-	if err != nil {
+	if err = redis.IsReady(); err != nil {
 		return err
 	}
 
-	if err = redis.IsReady(); err != nil {
+	for _, name := range []string{"eth1", "enp3s0f0"} {
+		eth1, err = net.InterfaceByName(name)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		return err
+	}
+	for _, name := range []string{"eth2", "enp3s0f1"} {
+		eth2, err = net.InterfaceByName(name)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
 		return err
 	}
 
