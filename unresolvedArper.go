@@ -26,7 +26,7 @@ func (p *unresolvedArper) addEvent(dt float64) {
 }
 
 func (p *unresolvedArper) String() string {
-	return fmt.Sprintf("redis stats poller sequence %d", p.sequence)
+	return fmt.Sprintf("unresolvedArper ping")
 }
 
 func (p *unresolvedArper) EventAction() {
