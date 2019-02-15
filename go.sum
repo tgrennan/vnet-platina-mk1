@@ -48,6 +48,8 @@ github.com/platinasystems/vnet v1.2.0-rc.1.0.20190116013705-71a1581910cd h1:v2Sn
 github.com/platinasystems/vnet v1.2.0-rc.1.0.20190116013705-71a1581910cd/go.mod h1:ys1IQV7DPZTq372+nIpfafe+2SAfLvVANSCNIrv24j8=
 github.com/platinasystems/vnet v1.2.0-rc.1.0.20190206002938-0c3fd2efd87c h1:rTAzMa0vronFB6FKoYkicCwf5OIiOxQ6vDWarc+kmf4=
 github.com/platinasystems/vnet v1.2.0-rc.1.0.20190206002938-0c3fd2efd87c/go.mod h1:qcDRb9eXE78ShP6R3e8PWhgWB8ld2KEhUbvds+QAoNI=
+github.com/platinasystems/vnet v1.2.1 h1:L+yJ4C290jOFkdFVAsDdseo9uy08EkrxesmyUo65xUg=
+github.com/platinasystems/vnet v1.2.1/go.mod h1:qcDRb9eXE78ShP6R3e8PWhgWB8ld2KEhUbvds+QAoNI=
 github.com/platinasystems/xeth v1.1.1 h1:zfN6+gAuZXjJev9JkZ8layQOR/mT3bchD962Vtfs9uI=
 github.com/platinasystems/xeth v1.1.1/go.mod h1:MokUskjwMrKdnZ08SVlEh9dkQreCHtPPEMFA81kdahI=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
