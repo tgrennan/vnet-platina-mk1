@@ -36,10 +36,9 @@ func main() {
 			fmt.Println(Version)
 		case "copyright", "license":
 			f = stub
-			err = marshalOut(Licenses())
+			err = marshalOut(licenses())
 		case "patents":
 			f = stub
-			err = marshalOut(Patents())
 		case "h", "help":
 			fmt.Println("vnetd [version, license, patents]")
 			return
@@ -65,7 +64,7 @@ func marshalOut(m map[string]string) error {
 	return err
 }
 
-func Licenses() map[string]string {
+func licenses() map[string]string {
 	return map[string]string{
 		"fe1":  fe1.License,
 		"fe1a": fe1a.License,
@@ -73,7 +72,8 @@ func Licenses() map[string]string {
 		"vnet-platina-mk1": License,
 	}
 }
-func Patents() map[string]string {
+
+func patents() map[string]string {
 	return map[string]string{
 		"fe1": fe1.Patents,
 	}
