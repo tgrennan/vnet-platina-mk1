@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Platina Systems, Inc. All rights reserved.
+// Copyright © 2016-2019 Platina Systems, Inc. All rights reserved.
 // Use of this source code is governed by the GPL-2 license described in the
 // LICENSE file.
 
@@ -21,6 +21,7 @@ import (
 )
 
 func main() {
+	const usage = "vnetd [install, version, license, patents]"
 	var err error
 	f := mk1Main
 	stub := func() error { return nil }
@@ -31,17 +32,20 @@ func main() {
 
 	for _, arg := range os.Args[1:] {
 		switch strings.TrimLeft(arg, "-") {
+		case "install":
+			f = stub
+			err = install()
 		case "version":
 			f = stub
-			err = marshalOut(Versions())
+			fmt.Println(Version)
 		case "copyright", "license":
 			f = stub
-			err = marshalOut(Licenses())
+			err = marshalOut(licenses())
 		case "patents":
 			f = stub
-			err = marshalOut(Patents())
-		case "h", "help":
-			fmt.Println("vnetd [version, license, patents]")
+			err = marshalOut(patents())
+		case "h", "help", "usage":
+			fmt.Println(usage)
 			return
 		default:
 			err = fmt.Errorf("%q unknown", arg)
@@ -65,7 +69,7 @@ func marshalOut(m map[string]string) error {
 	return err
 }
 
-func Licenses() map[string]string {
+func licenses() map[string]string {
 	return map[string]string{
 		"fe1":  fe1.License,
 		"fe1a": fe1a.License,
@@ -73,17 +77,9 @@ func Licenses() map[string]string {
 		"vnet-platina-mk1": License,
 	}
 }
-func Patents() map[string]string {
+
+func patents() map[string]string {
 	return map[string]string{
 		"fe1": fe1.Patents,
-	}
-}
-
-func Versions() map[string]string {
-	return map[string]string{
-		"fe1":  fe1.Version,
-		"fe1a": fe1a.Version,
-
-		"vnet-platina-mk1": Version,
 	}
 }
