@@ -21,6 +21,7 @@ import (
 )
 
 func main() {
+	const usage = "vnetd [install, version, license, patents]"
 	var err error
 	f := mk1Main
 	stub := func() error { return nil }
@@ -31,6 +32,9 @@ func main() {
 
 	for _, arg := range os.Args[1:] {
 		switch strings.TrimLeft(arg, "-") {
+		case "install":
+			f = stub
+			err = install()
 		case "version":
 			f = stub
 			fmt.Println(Version)
@@ -39,8 +43,9 @@ func main() {
 			err = marshalOut(licenses())
 		case "patents":
 			f = stub
-		case "h", "help":
-			fmt.Println("vnetd [version, license, patents]")
+			err = marshalOut(patents())
+		case "h", "help", "usage":
+			fmt.Println(usage)
 			return
 		default:
 			err = fmt.Errorf("%q unknown", arg)
