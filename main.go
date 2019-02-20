@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Platina Systems, Inc. All rights reserved.
+// Copyright © 2016-2019 Platina Systems, Inc. All rights reserved.
 // Use of this source code is governed by the GPL-2 license described in the
 // LICENSE file.
 
@@ -33,7 +33,7 @@ func main() {
 		switch strings.TrimLeft(arg, "-") {
 		case "version":
 			f = stub
-			err = marshalOut(Versions())
+			fmt.Println(Version)
 		case "copyright", "license":
 			f = stub
 			err = marshalOut(Licenses())
@@ -76,14 +76,5 @@ func Licenses() map[string]string {
 func Patents() map[string]string {
 	return map[string]string{
 		"fe1": fe1.Patents,
-	}
-}
-
-func Versions() map[string]string {
-	return map[string]string{
-		"fe1":  fe1.Version,
-		"fe1a": fe1a.Version,
-
-		"vnet-platina-mk1": Version,
 	}
 }
