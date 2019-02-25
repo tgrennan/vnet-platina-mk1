@@ -26,6 +26,8 @@ github.com/platinasystems/fe1 v1.2.0-rc.1.0.20190108064611-a17e46e8f82b h1:CXYsc
 github.com/platinasystems/fe1 v1.2.0-rc.1.0.20190108064611-a17e46e8f82b/go.mod h1:VZ5sc7XZdBBvLvv8iK53Ib51Dc5Wr+Ft3c2HfvBnJaw=
 github.com/platinasystems/fe1 v1.2.1 h1:D+T6JO/KXlj7Vlq+sXe3vbK6WX7ZkKWd1kvhXS6gpzE=
 github.com/platinasystems/fe1 v1.2.1/go.mod h1:VZ5sc7XZdBBvLvv8iK53Ib51Dc5Wr+Ft3c2HfvBnJaw=
+github.com/platinasystems/fe1 v1.3.0 h1:RpviGmd4ba4MYtWjurjxLCpvabcVkJbFr6Y8xqbaJho=
+github.com/platinasystems/fe1 v1.3.0/go.mod h1:VZ5sc7XZdBBvLvv8iK53Ib51Dc5Wr+Ft3c2HfvBnJaw=
 github.com/platinasystems/firmware-fe1a v1.1.0 h1:4MW5FHQLIMPDkCWnmn3FZJ8Q3yZ1oSLaPxMq1DuvL6w=
 github.com/platinasystems/firmware-fe1a v1.1.0/go.mod h1:F0KAFwctbk1FB557q7m6atg3aQgyHj9NmAle2KswM6E=
 github.com/platinasystems/i2c v1.1.0 h1:34ewZSwxMvtD5kYjJAhNtwmEsCFjiQt+o6OJ62Ni2ug=
@@ -54,6 +56,8 @@ github.com/platinasystems/vnet v1.2.1 h1:L+yJ4C290jOFkdFVAsDdseo9uy08EkrxesmyUo6
 github.com/platinasystems/vnet v1.2.1/go.mod h1:qcDRb9eXE78ShP6R3e8PWhgWB8ld2KEhUbvds+QAoNI=
 github.com/platinasystems/vnet v1.2.2 h1:64T45deIn47xCkpzihpQbSouTEIwUsMtJ1T9XpoAw4g=
 github.com/platinasystems/vnet v1.2.2/go.mod h1:qcDRb9eXE78ShP6R3e8PWhgWB8ld2KEhUbvds+QAoNI=
+github.com/platinasystems/vnet v1.3.0 h1:vsCU7+ZDeDhtOVrre5LPzPurzt8hjQbYV5fA9zJFJO4=
+github.com/platinasystems/vnet v1.3.0/go.mod h1:Ova3OHl6diPh4JOCR7lDD29v6oZG+M9QywtVw1sSiu0=
 github.com/platinasystems/xeth v1.1.1 h1:zfN6+gAuZXjJev9JkZ8layQOR/mT3bchD962Vtfs9uI=
 github.com/platinasystems/xeth v1.1.1/go.mod h1:MokUskjwMrKdnZ08SVlEh9dkQreCHtPPEMFA81kdahI=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
