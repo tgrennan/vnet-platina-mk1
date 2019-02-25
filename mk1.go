@@ -7,7 +7,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/rpc"
 	"os"
 	"os/signal"
@@ -63,32 +62,12 @@ func mk1Main() error {
 
 	var mk1 Mk1
 	var in parse.Input
-	var eth1, eth2 *net.Interface
 	var err error
 
 	xeth.EthtoolPrivFlagNames = flags
 	xeth.EthtoolStatNames = stats
 
 	if err = redis.IsReady(); err != nil {
-		return err
-	}
-
-	for _, name := range []string{"eth1", "enp3s0f0"} {
-		eth1, err = net.InterfaceByName(name)
-		if err == nil {
-			break
-		}
-	}
-	if err != nil {
-		return err
-	}
-	for _, name := range []string{"eth2", "enp3s0f1"} {
-		eth2, err = net.InterfaceByName(name)
-		if err == nil {
-			break
-		}
-	}
-	if err != nil {
 		return err
 	}
 
@@ -167,16 +146,7 @@ func mk1Main() error {
 				dbgSvi.Logf("%v speed %v", ifname, entry.Speed)
 			}
 		case xeth.XETH_MSG_KIND_IFINFO:
-			var punt_index uint8
 			msg := (*xeth.MsgIfinfo)(ptr)
-
-			// convert eth1/eth2 to meth-0/meth-1
-			switch msg.Iflinkindex {
-			case int32(eth1.Index):
-				punt_index = 0
-			case int32(eth2.Index):
-				punt_index = 1
-			}
 
 			switch msg.Devtype {
 			case xeth.XETH_DEVTYPE_LINUX_VLAN:
@@ -184,7 +154,7 @@ func mk1Main() error {
 			case xeth.XETH_DEVTYPE_LINUX_BRIDGE:
 				fallthrough
 			case xeth.XETH_DEVTYPE_XETH_PORT:
-				err = unix.ProcessInterfaceInfo((*xeth.MsgIfinfo)(ptr), vnet.PreVnetd, nil, punt_index)
+				err = unix.ProcessInterfaceInfo((*xeth.MsgIfinfo)(ptr), vnet.PreVnetd, nil)
 			case xeth.XETH_DEVTYPE_LINUX_UNKNOWN:
 				// FIXME
 			}
