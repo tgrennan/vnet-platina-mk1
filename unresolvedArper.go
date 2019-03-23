@@ -34,7 +34,7 @@ func (p *unresolvedArper) EventAction() {
 	im4 := ip4.GetMain(&p.mk1.vnet)
 	im4.ForeachUnresolved(func(fi ip.FibIndex, p net.IPNet) {
 		xargs := []string{"ping", "-q", "-c", "1", "-W", "1", p.IP.String()}
-		netns := fi.Name(&im4.Main)
+		netns := im4.FibNameForIndex(fi)
 		if netns != "default" {
 			xargs = append([]string{"ip", "netns", "exec", netns}, xargs...)
 		}
