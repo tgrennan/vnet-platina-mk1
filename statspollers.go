@@ -122,10 +122,10 @@ func (p *ifStatsPoller) EventAction() {
 		})
 
 	p.mk1.vnet.ForeachSwIfCounter(includeZeroCounters,
-		func(si vnet.Si, counter string, value uint64) {
+		func(si vnet.Si, siName, counter string, value uint64) {
 			p.swInterfaces.Validate(uint(si))
 			if p.swInterfaces[si].update(counter, value) && true {
-				pubcount(si.Name(&p.mk1.vnet), counter, value)
+				pubcount(siName, counter, value)
 			}
 		})
 

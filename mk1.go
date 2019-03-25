@@ -278,7 +278,7 @@ func (mk1 *Mk1) sw_if_add_del(v *vnet.Vnet, si vnet.Si, isDel bool) error {
 
 func (mk1 *Mk1) sw_if_admin_up_down(v *vnet.Vnet, si vnet.Si, isUp bool) error {
 	if mk1.sw_is_ok(si) {
-		mk1.poller.pubch <- fmt.Sprint(si.Name(v), ".admin: ",
+		mk1.poller.pubch <- fmt.Sprint(vnet.SiName{V: v, Si: si}, ".admin: ",
 			parse.Enable(isUp))
 	}
 	return nil
