@@ -4,7 +4,7 @@ require (
 	github.com/platinasystems/atsock v1.1.0
 	github.com/platinasystems/dbg v1.1.0
 	github.com/platinasystems/elib v1.3.0
-	github.com/platinasystems/fe1 v1.3.4
+	github.com/platinasystems/fe1 v1.3.5
 	github.com/platinasystems/firmware-fe1a v1.1.0
 	github.com/platinasystems/redis v1.2.0
 	github.com/platinasystems/vnet v1.4.1

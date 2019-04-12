@@ -36,6 +36,8 @@ github.com/platinasystems/fe1 v1.3.3 h1:XcF2iRApNdhYGY+5ih0vKU1Klsh3lPF1kM6Ktpv7
 github.com/platinasystems/fe1 v1.3.3/go.mod h1:kA8xBOfoo9/jCGlub/Te2S9S4YPzy/De5znZ7ltnJxc=
 github.com/platinasystems/fe1 v1.3.4 h1:2SzFGNZBoVFIWJGLgawGQ81nkXlHOkdvQATd+CCIEls=
 github.com/platinasystems/fe1 v1.3.4/go.mod h1:Wjhqn0GDgRXeeNwOgyT+OiO6XseFmB3JxgOfwYVdd0g=
+github.com/platinasystems/fe1 v1.3.5 h1:fRERS/Psa9xGqZKZ32m2Yz64XpHIMpqhs5H6DFckj0k=
+github.com/platinasystems/fe1 v1.3.5/go.mod h1:Wjhqn0GDgRXeeNwOgyT+OiO6XseFmB3JxgOfwYVdd0g=
 github.com/platinasystems/firmware-fe1a v1.1.0 h1:4MW5FHQLIMPDkCWnmn3FZJ8Q3yZ1oSLaPxMq1DuvL6w=
 github.com/platinasystems/firmware-fe1a v1.1.0/go.mod h1:F0KAFwctbk1FB557q7m6atg3aQgyHj9NmAle2KswM6E=
 github.com/platinasystems/i2c v1.1.0 h1:34ewZSwxMvtD5kYjJAhNtwmEsCFjiQt+o6OJ62Ni2ug=
