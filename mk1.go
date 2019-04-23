@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/rpc"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 	"sync"
@@ -68,6 +69,12 @@ func mk1Main() error {
 	xeth.EthtoolStatNames = stats
 
 	if err = redis.IsReady(); err != nil {
+		return err
+	}
+
+	err = exec.Command("/usr/bin/goes",
+		"ip", "-a", "neighbor", "flush").Run()
+	if err != nil {
 		return err
 	}
 
