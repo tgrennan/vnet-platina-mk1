@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Platina Systems, Inc. All rights reserved.
+// Copyright © 2016-2019 Platina Systems, Inc. All rights reserved.
 // Use of this source code is governed by the GPL-2 license described in the
 // LICENSE file.
 
@@ -462,21 +462,21 @@ func (mk1 *Mk1) set(key, value string, isReadyEvent bool) (err error) {
 func (mk1 *Mk1) setup() error {
 	mk1.platform.Init = mk1.init
 
-	s, err := redis.Hget(redis.DefaultHash, "eeprom.DeviceVersion")
+	s, err := onie("device_version")
 	if err != nil {
 		return err
 	}
 	if _, err = fmt.Sscan(s, &mk1.platform.Version); err != nil {
 		return err
 	}
-	s, err = redis.Hget(redis.DefaultHash, "eeprom.NEthernetAddress")
+	s, err = onie("num_macs")
 	if err != nil {
 		return err
 	}
 	if _, err = fmt.Sscan(s, &mk1.platform.NEthernetAddress); err != nil {
 		return err
 	}
-	s, err = redis.Hget(redis.DefaultHash, "eeprom.BaseEthernetAddress")
+	s, err = onie("mac_base")
 	if err != nil {
 		return err
 	}
