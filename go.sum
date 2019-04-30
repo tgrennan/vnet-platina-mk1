@@ -16,6 +16,8 @@ github.com/platinasystems/elib v1.3.0 h1:zzANIxddy26CZ9QCQdgnTj55jKBba7slQFJDLaa
 github.com/platinasystems/elib v1.3.0/go.mod h1:XZy8etdf41RtMxmxEYArLL7T6QEJ5MPAIeHDqXtPCUU=
 github.com/platinasystems/elib v1.3.1 h1:01WW2Ouv7N7PJ/YhHzFp5H9daMugVTnJZeP8ux4M0u8=
 github.com/platinasystems/elib v1.3.1/go.mod h1:XZy8etdf41RtMxmxEYArLL7T6QEJ5MPAIeHDqXtPCUU=
+github.com/platinasystems/elib v1.3.2 h1:MwlMd+ik1X0KVZXqIk9iPqH+Dw9WamxLFHZp89wtHEI=
+github.com/platinasystems/elib v1.3.2/go.mod h1:XZy8etdf41RtMxmxEYArLL7T6QEJ5MPAIeHDqXtPCUU=
 github.com/platinasystems/fe1 v1.1.2 h1:bGMIQxojVonquSi2EDiQysHxdzdMXj+ksx3Y5eAfHhc=
 github.com/platinasystems/fe1 v1.1.2/go.mod h1:7P+3V7/e7IJyhggnBZj8Ol0TJttJwsKXupDHly2k50A=
 github.com/platinasystems/fe1 v1.1.3 h1:9mKxjxeIVHIvDXBFNXVu1b47LMqySggrA9MdfACmcao=
@@ -46,6 +48,8 @@ github.com/platinasystems/fe1 v1.3.8 h1:DtNv8ciOZY6BvMNyaYkGtseITlEUpXbgJ2KYKHIG
 github.com/platinasystems/fe1 v1.3.8/go.mod h1:f4VUprY7QJ8ttWHqQBTMMbZA4aUsM/mg4r6keDtGnqE=
 github.com/platinasystems/fe1 v1.3.9 h1:B0P/zYhylYhoe7KwUL1FTmOkq8CaZfl5tICLT8h4pnE=
 github.com/platinasystems/fe1 v1.3.9/go.mod h1:NuMKpDGocoYOJiyO5vCRh5SIqqjDviGOy4+oaTReCwo=
+github.com/platinasystems/fe1 v1.3.10 h1:I2+b/OGAzYKQFJxw8u1aArUF4lsSvFDSxgOVzJb8B+Y=
+github.com/platinasystems/fe1 v1.3.10/go.mod h1:79woERdBiLJVb84JmPi2Qj+vKFs9YM58cq6/em0ujfQ=
 github.com/platinasystems/firmware-fe1a v1.1.0 h1:4MW5FHQLIMPDkCWnmn3FZJ8Q3yZ1oSLaPxMq1DuvL6w=
 github.com/platinasystems/firmware-fe1a v1.1.0/go.mod h1:F0KAFwctbk1FB557q7m6atg3aQgyHj9NmAle2KswM6E=
 github.com/platinasystems/i2c v1.1.0 h1:34ewZSwxMvtD5kYjJAhNtwmEsCFjiQt+o6OJ62Ni2ug=
@@ -90,6 +94,8 @@ github.com/platinasystems/vnet v1.4.3 h1:XFEM+Z3MAP4ss8t6GANh8/aYj0tBVQuE84pUsFX
 github.com/platinasystems/vnet v1.4.3/go.mod h1:e/XAJyGw2XEGCkPqXFqL87rUWhFnM96yZOe2qQ2o1/E=
 github.com/platinasystems/vnet v1.4.4 h1:+J3z1Dju4QtC00tUiSJs1ZftCVFL3ppiKnGSX0guqOE=
 github.com/platinasystems/vnet v1.4.4/go.mod h1:e/XAJyGw2XEGCkPqXFqL87rUWhFnM96yZOe2qQ2o1/E=
+github.com/platinasystems/vnet v1.4.5 h1:brZrnWTpzUB71AqGK62Vd6iZJhCjaN65yW2/nE2IFtw=
+github.com/platinasystems/vnet v1.4.5/go.mod h1:BWzOKqol5wy5KvwIFD8/TcNNC0/DsdH3MEr7jLBGXnE=
 github.com/platinasystems/xeth v1.1.1 h1:zfN6+gAuZXjJev9JkZ8layQOR/mT3bchD962Vtfs9uI=
 github.com/platinasystems/xeth v1.1.1/go.mod h1:MokUskjwMrKdnZ08SVlEh9dkQreCHtPPEMFA81kdahI=
 github.com/platinasystems/xeth v1.2.0 h1:hiKWh/UmTWuj8+PXaOO8qPwL2xUjwyo9bEv3vkcHbTE=
