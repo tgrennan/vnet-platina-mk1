@@ -72,8 +72,7 @@ func mk1Main() error {
 		return err
 	}
 
-	err = exec.Command("/usr/bin/goes",
-		"ip", "-a", "neighbor", "flush").Run()
+	err = exec.Command("ip", "-a", "neighbor", "flush", "all").Run()
 	if err != nil {
 		return err
 	}
