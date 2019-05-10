@@ -310,12 +310,9 @@ func (mk1 *Mk1) hw_if_link_up_down(v *vnet.Vnet, hi vnet.Hi, isUp bool) error {
 		if _, found := vnet.Ports.GetPortByName(hi.Name(v)); found {
 			index := xeth.Interface.Named(hi.Name(v)).Ifinfo.Index
 			xeth.Carrier(index, flag)
-		} else {
-			fmt.Printf("%v not found in Linux; redis link status update OK; Linux and hardware/redis link status potentially out of sync", hi.Name(v))
 		}
 		mk1.publish_link(hi, isUp)
 	}
-	fmt.Printf("%v not provisioned; redis/Linux link status update failed; hardware and Linux/redis link status potentially out of sync", hi.Name(v))
 	return nil
 }
 
