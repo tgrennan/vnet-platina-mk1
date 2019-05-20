@@ -50,6 +50,8 @@ github.com/platinasystems/fe1 v1.3.9 h1:B0P/zYhylYhoe7KwUL1FTmOkq8CaZfl5tICLT8h4
 github.com/platinasystems/fe1 v1.3.9/go.mod h1:NuMKpDGocoYOJiyO5vCRh5SIqqjDviGOy4+oaTReCwo=
 github.com/platinasystems/fe1 v1.3.10 h1:I2+b/OGAzYKQFJxw8u1aArUF4lsSvFDSxgOVzJb8B+Y=
 github.com/platinasystems/fe1 v1.3.10/go.mod h1:79woERdBiLJVb84JmPi2Qj+vKFs9YM58cq6/em0ujfQ=
+github.com/platinasystems/fe1 v1.3.11 h1:WQFt9dNIKKKBwFFf2yb7Mt5BJ8a53Y5QG4/D+PQTlTk=
+github.com/platinasystems/fe1 v1.3.11/go.mod h1:79woERdBiLJVb84JmPi2Qj+vKFs9YM58cq6/em0ujfQ=
 github.com/platinasystems/firmware-fe1a v1.1.0 h1:4MW5FHQLIMPDkCWnmn3FZJ8Q3yZ1oSLaPxMq1DuvL6w=
 github.com/platinasystems/firmware-fe1a v1.1.0/go.mod h1:F0KAFwctbk1FB557q7m6atg3aQgyHj9NmAle2KswM6E=
 github.com/platinasystems/i2c v1.1.0 h1:34ewZSwxMvtD5kYjJAhNtwmEsCFjiQt+o6OJ62Ni2ug=
@@ -96,6 +98,8 @@ github.com/platinasystems/vnet v1.4.4 h1:+J3z1Dju4QtC00tUiSJs1ZftCVFL3ppiKnGSX0g
 github.com/platinasystems/vnet v1.4.4/go.mod h1:e/XAJyGw2XEGCkPqXFqL87rUWhFnM96yZOe2qQ2o1/E=
 github.com/platinasystems/vnet v1.4.5 h1:brZrnWTpzUB71AqGK62Vd6iZJhCjaN65yW2/nE2IFtw=
 github.com/platinasystems/vnet v1.4.5/go.mod h1:BWzOKqol5wy5KvwIFD8/TcNNC0/DsdH3MEr7jLBGXnE=
+github.com/platinasystems/vnet v1.4.6 h1:JcyEZB4g8E5+retCxiSqqVaFTPaHYc972Krvz0h4bS8=
+github.com/platinasystems/vnet v1.4.6/go.mod h1:BWzOKqol5wy5KvwIFD8/TcNNC0/DsdH3MEr7jLBGXnE=
 github.com/platinasystems/xeth v1.1.1 h1:zfN6+gAuZXjJev9JkZ8layQOR/mT3bchD962Vtfs9uI=
 github.com/platinasystems/xeth v1.1.1/go.mod h1:MokUskjwMrKdnZ08SVlEh9dkQreCHtPPEMFA81kdahI=
 github.com/platinasystems/xeth v1.2.0 h1:hiKWh/UmTWuj8+PXaOO8qPwL2xUjwyo9bEv3vkcHbTE=
