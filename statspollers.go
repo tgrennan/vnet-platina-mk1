@@ -103,7 +103,7 @@ func (p *ifStatsPoller) EventAction() {
 		entry := xeth.Interface.Named(ifname)
 		if value != 0 && entry != nil &&
 			entry.DevType == xeth.XETH_DEVTYPE_XETH_PORT {
-			if _, found := vnet.Ports[ifname]; found {
+			if _, found := vnet.Ports.Load(ifname); found {
 				xethif := xeth.Interface.Named(ifname)
 				ifindex := xethif.Ifinfo.Index
 				xeth.SetStat(ifindex, counter, value)

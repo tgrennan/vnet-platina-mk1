@@ -110,19 +110,19 @@ func mk1Main() error {
 	}
 
 	vnet.PortIsCopper = func(ifname string) bool {
-		if p, found := vnet.Ports[ifname]; found {
+		if p, found := vnet.Ports.GetPortByName(ifname); found {
 			return p.Flags.Test(CopperBit)
 		}
 		return false
 	}
 	vnet.PortIsFec74 = func(ifname string) bool {
-		if p, found := vnet.Ports[ifname]; found {
+		if p, found := vnet.Ports.GetPortByName(ifname); found {
 			return p.Flags.Test(Fec74Bit)
 		}
 		return false
 	}
 	vnet.PortIsFec91 = func(ifname string) bool {
-		if p, found := vnet.Ports[ifname]; found {
+		if p, found := vnet.Ports.GetPortByName(ifname); found {
 			return p.Flags.Test(Fec91Bit)
 		}
 		return false
@@ -137,7 +137,7 @@ func mk1Main() error {
 			msg := (*xeth.MsgEthtoolFlags)(ptr)
 			xethif := xeth.Interface.Indexed(msg.Ifindex)
 			ifname := xethif.Ifinfo.Name
-			entry, found := vnet.Ports[ifname]
+			entry, found := vnet.Ports.GetPortByName(ifname)
 			if found {
 				entry.Flags = xeth.EthtoolPrivFlags(msg.Flags)
 				dbgSvi.Logf("%v flags %v", ifname, entry.Flags)
@@ -146,7 +146,7 @@ func mk1Main() error {
 			msg := (*xeth.MsgEthtoolSettings)(ptr)
 			xethif := xeth.Interface.Indexed(msg.Ifindex)
 			ifname := xethif.Ifinfo.Name
-			entry, found := vnet.Ports[ifname]
+			entry, found := vnet.Ports.GetPortByName(ifname)
 			if found {
 				entry.Speed = xeth.Mbps(msg.Speed)
 				dbgSvi.Logf("%v speed %v", ifname, entry.Speed)
@@ -307,7 +307,7 @@ func (mk1 *Mk1) hw_if_link_up_down(v *vnet.Vnet, hi vnet.Hi, isUp bool) error {
 			flag = xeth.XETH_CARRIER_ON
 		}
 		// Make sure interface is known to platina-mk1 driver
-		if _, found := vnet.Ports[hi.Name(v)]; found {
+		if _, found := vnet.Ports.GetPortByName(hi.Name(v)); found {
 			index := xeth.Interface.Named(hi.Name(v)).Ifinfo.Index
 			xeth.Carrier(index, flag)
 		}
@@ -338,9 +338,9 @@ func (mk1 *Mk1) parsePortConfig() (err error) {
 	} else { // ethtool
 		// Massage ethtool port-provision format into fe1 format
 		var pp vnetfe1.PortProvision
-		for ifname, entry := range vnet.Ports {
+		vnet.Ports.Foreach(func(ifname string, entry *vnet.PortEntry) {
 			if entry.Devtype >= xeth.XETH_DEVTYPE_LINUX_UNKNOWN {
-				continue
+				return
 			}
 			pp.Name = ifname
 			pp.Portindex = entry.Portindex
@@ -390,7 +390,7 @@ func (mk1 *Mk1) parsePortConfig() (err error) {
 			}
 
 			plat.PortConfig.Ports = append(plat.PortConfig.Ports, pp)
-		}
+		})
 	}
 	return
 }

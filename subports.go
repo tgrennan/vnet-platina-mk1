@@ -13,13 +13,13 @@ type spList []uint
 
 func subportsMatchingPort(targetport uint) (numsubports uint, subportlist spList) {
 	subportlist = []uint{0xf, 0xf, 0xf, 0xf}
-	for _, pe := range vnet.Ports {
+	vnet.Ports.Foreach(func(ifname string, pe *vnet.PortEntry) {
 		if pe.Devtype == xeth.XETH_DEVTYPE_XETH_PORT &&
 			pe.Portindex == int16(targetport) {
 			subportlist[numsubports] = uint(pe.Subportindex)
 			numsubports++
 		}
-	}
+	})
 	return
 }
 
