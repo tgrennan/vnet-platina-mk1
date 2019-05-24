@@ -9,10 +9,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/platinasystems/buildinfo"
 	"github.com/platinasystems/fe1"
 	fe1a "github.com/platinasystems/firmware-fe1a"
 	"github.com/platinasystems/redis"
@@ -20,11 +22,18 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+const usage = `
+usage:	vnet-platina-mk1
+	vnet-platina-mk1 install
+	vnet-platina-mk1 [show] {version, buildinfo, license, patents}`
+
+var ErrUsage = errors.New(usage[1:])
+
 func main() {
-	const usage = "vnetd [install, version, license, patents]"
 	var err error
 	f := mk1Main
 	stub := func() error { return nil }
+	show := false
 
 	redis.DefaultHash = "platina-mk1"
 	vnetfe1.AddPlatform = fe1.AddPlatform
@@ -34,10 +43,19 @@ func main() {
 		switch strings.TrimLeft(arg, "-") {
 		case "install":
 			f = stub
-			err = install()
+			if show {
+				err = ErrUsage
+			} else {
+				err = install()
+			}
+		case "show":
+			show = true
 		case "version":
 			f = stub
-			fmt.Println(Version)
+			fmt.Println(buildinfo.New().Version())
+		case "buildinfo":
+			f = stub
+			fmt.Println(buildinfo.New())
 		case "copyright", "license":
 			f = stub
 			err = marshalOut(licenses())
@@ -45,7 +63,7 @@ func main() {
 			f = stub
 			err = marshalOut(patents())
 		case "h", "help", "usage":
-			fmt.Println(usage)
+			fmt.Println(usage[1:])
 			return
 		default:
 			err = fmt.Errorf("%q unknown", arg)
