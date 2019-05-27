@@ -2,6 +2,7 @@ module github.com/platinasystems/vnet-platina-mk1
 
 require (
 	github.com/platinasystems/atsock v1.1.0
+	github.com/platinasystems/buildid v1.0.0
 	github.com/platinasystems/buildinfo v1.1.0
 	github.com/platinasystems/dbg v1.1.0
 	github.com/platinasystems/elib v1.3.2
