@@ -17,9 +17,7 @@ import (
 	"github.com/platinasystems/buildid"
 	"github.com/platinasystems/buildinfo"
 	"github.com/platinasystems/fe1"
-	fe1a "github.com/platinasystems/firmware-fe1a"
-	"github.com/platinasystems/redis"
-	vnetfe1 "github.com/platinasystems/vnet/devices/ethernet/switch/fe1"
+	firmware "github.com/platinasystems/firmware-fe1a"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -39,9 +37,6 @@ func main() {
 		}
 	}
 	if len(args) == 0 {
-		redis.DefaultHash = "platina-mk1"
-		vnetfe1.AddPlatform = fe1.AddPlatform
-		vnetfe1.Init = fe1.Init
 		assert(mk1Main())
 		return
 	}
@@ -89,15 +84,16 @@ func marshalOut(m map[string]string) error {
 
 func licenses() map[string]string {
 	return map[string]string{
-		"fe1":  fe1.License,
-		"fe1a": fe1a.License,
+		"fe1": strings.TrimSpace(fe1.License),
 
-		"vnet-platina-mk1": License,
+		"firmware": strings.TrimSpace(firmware.License),
+
+		"vnet-platina-mk1": strings.TrimSpace(License),
 	}
 }
 
 func patents() map[string]string {
 	return map[string]string{
-		"fe1": fe1.Patents,
+		"fe1": strings.TrimSpace(fe1.Patents),
 	}
 }

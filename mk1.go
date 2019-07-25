@@ -5,557 +5,237 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"net/rpc"
-	"os"
 	"os/exec"
-	"os/signal"
-	"strings"
-	"sync"
-	"syscall"
-	"time"
-	"unsafe"
 
-	"github.com/platinasystems/atsock"
 	"github.com/platinasystems/elib/parse"
+	"github.com/platinasystems/fe1/pc"
 	"github.com/platinasystems/redis"
 	"github.com/platinasystems/redis/publisher"
-	"github.com/platinasystems/redis/rpc/args"
-	"github.com/platinasystems/redis/rpc/reply"
 	"github.com/platinasystems/vnet"
-	"github.com/platinasystems/vnet/ethernet"
-	vnetfe1 "github.com/platinasystems/vnet/platforms/fe1"
-	vnetmk1 "github.com/platinasystems/vnet/platforms/mk1"
-	"github.com/platinasystems/vnet/unix"
-	"github.com/platinasystems/xeth"
-	yaml "gopkg.in/yaml.v2"
+	"github.com/platinasystems/vnet/devices/vnetonie"
 )
 
-const chanDepth = 1 << 16
+const FIXME = false
 
-type Mk1 struct {
-	vnet            vnet.Vnet
-	platform        vnetfe1.Platform
-	eventPool       sync.Pool
+var mk1 = struct {
+	pubch chan<- string
+	/* FIXME-XETH
+	eventPool sync.Pool
+	platform  fe1.Fe1Platform
 	poller          ifStatsPoller
 	fastPoller      fastIfStatsPoller
 	unresolvedArper unresolvedArper
-	pub             *publisher.Publisher
-	// producer	*kafka.Producer
+	producer	*kafka.Producer
 
 	// Enable publish of Non-unix (e.g. non-tuntap) interfaces.
 	// This will include all vnet interfaces.
 	unixInterfacesOnly bool
 
 	prevHwIfConfig map[string]*hwIfConfig
+	FIXME-XETH */
+}{
+	/* FIXME-XETH
+	eventPool: sync.Pool{
+		New: func() interface{} {
+			return &event{
+				err:      make(chan error, 1),
+				newValue: make(chan string, 1),
+			}
+		},
+	},
+	FIXME-XETH */
 }
 
+/* FIXME-XETH
 type hwIfConfig struct {
 	speed string
 	media string
 	fec   string
 }
+FIXME-XETH */
 
 func mk1Main() error {
-	const nports = 4 * 32
-	const ncounters = 512
-
-	var mk1 Mk1
 	var in parse.Input
-	var err error
-
-	xeth.EthtoolPrivFlagNames = flags
-	xeth.EthtoolStatNames = stats
-
-	if err = redis.IsReady(); err != nil {
-		return err
-	}
-
-	err = exec.Command("ip", "-a", "neighbor", "flush", "all").Run()
-	if err != nil {
-		return err
-	}
-
-	if mk1.pub, err = publisher.New(); err != nil {
-		return err
-	}
-	defer mk1.pub.Close()
-
-	if err = xeth.Start(redis.DefaultHash); err != nil {
-		return err
-	}
-
-	rpc.Register(&mk1)
-
-	sock, err := atsock.NewRpcServer("vnetd")
-	if err != nil {
-		return err
-	}
-	defer sock.Close()
-
-	mk1.poller.pubch = make(chan string, chanDepth)
-	defer close(mk1.poller.pubch)
-	go mk1.gopublish()
-
-	if false {
-		mk1.fastPoller.pubch = make(chan string)
-		defer close(mk1.fastPoller.pubch)
-		go mk1.gopublishHf()
-	}
-
-	err = redis.Assign(redis.DefaultHash+":vnet.", "vnetd", "Mk1")
-	if err != nil {
-		return err
-	}
-
-	vnet.PortIsCopper = func(ifname string) bool {
-		if p, found := vnet.Ports.GetPortByName(ifname); found {
-			return p.Flags.Test(CopperBit)
-		}
-		return false
-	}
-	vnet.PortIsFec74 = func(ifname string) bool {
-		if p, found := vnet.Ports.GetPortByName(ifname); found {
-			return p.Flags.Test(Fec74Bit)
-		}
-		return false
-	}
-	vnet.PortIsFec91 = func(ifname string) bool {
-		if p, found := vnet.Ports.GetPortByName(ifname); found {
-			return p.Flags.Test(Fec91Bit)
-		}
-		return false
-	}
-
-	xeth.DumpIfinfo()
-	err = xeth.UntilBreak(func(buf []byte) error {
-		ptr := unsafe.Pointer(&buf[0])
-		kind := xeth.KindOf(buf)
-		switch kind {
-		case xeth.XETH_MSG_KIND_ETHTOOL_FLAGS:
-			msg := (*xeth.MsgEthtoolFlags)(ptr)
-			xethif := xeth.Interface.Indexed(msg.Ifindex)
-			ifname := xethif.Ifinfo.Name
-			entry, found := vnet.Ports.GetPortByName(ifname)
-			if found {
-				entry.Flags = xeth.EthtoolPrivFlags(msg.Flags)
-				dbgSvi.Logf("%v flags %v", ifname, entry.Flags)
-			}
-		case xeth.XETH_MSG_KIND_ETHTOOL_SETTINGS:
-			msg := (*xeth.MsgEthtoolSettings)(ptr)
-			xethif := xeth.Interface.Indexed(msg.Ifindex)
-			ifname := xethif.Ifinfo.Name
-			entry, found := vnet.Ports.GetPortByName(ifname)
-			if found {
-				entry.Speed = xeth.Mbps(msg.Speed)
-				dbgSvi.Logf("%v speed %v", ifname, entry.Speed)
-			}
-		case xeth.XETH_MSG_KIND_IFINFO:
-			msg := (*xeth.MsgIfinfo)(ptr)
-
-			switch msg.Devtype {
-			case xeth.XETH_DEVTYPE_LINUX_VLAN:
-				fallthrough
-			case xeth.XETH_DEVTYPE_LINUX_BRIDGE:
-				fallthrough
-			case xeth.XETH_DEVTYPE_XETH_PORT:
-				err = unix.ProcessInterfaceInfo((*xeth.MsgIfinfo)(ptr), vnet.PreVnetd, nil)
-			case xeth.XETH_DEVTYPE_LINUX_UNKNOWN:
-				// FIXME
-			}
-		case xeth.XETH_MSG_KIND_IFA:
-			err = unix.ProcessInterfaceAddr((*xeth.MsgIfa)(ptr), vnet.PreVnetd, nil)
-		}
-		dbgSvi.Log(err)
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	mk1.eventPool.New = mk1.newEvent
-
-	mk1.vnet.RegisterHwIfAddDelHook(mk1.hw_if_add_del)
-	mk1.vnet.RegisterHwIfLinkUpDownHook(mk1.hw_if_link_up_down)
-	mk1.vnet.RegisterSwIfAddDelHook(mk1.sw_if_add_del)
-	mk1.vnet.RegisterSwIfAdminUpDownHook(mk1.sw_if_admin_up_down)
-
-	if err = mk1.setup(); err != nil {
-		return err
-	}
 
 	in.SetString("cli { listen { no-prompt socket @vnet } }")
 
-	signal.Notify(make(chan os.Signal, 1), syscall.SIGPIPE)
+	err := mk1GpioInit()
+	if err != nil {
+		return err
+	}
 
-	sigterm := make(chan os.Signal)
-	signal.Notify(sigterm, syscall.SIGTERM)
-	defer close(sigterm)
-	go func() {
-		for sig := range sigterm {
-			if sig == syscall.SIGTERM {
-				mk1.vnet.Quit()
+	vnet.Init()
+
+	redis.DefaultHash = "platina-mk1"
+	err = redis.IsReady()
+	if err != nil {
+		return err
+	}
+
+	pub, err := publisher.New()
+	if err != nil {
+		return err
+	}
+
+	pubch := make(chan string, 1<<16)
+	mk1.pubch = pubch
+
+	go mk1GoPub(pub, pubch)
+
+	mk1OnieInit()
+	mk1XethInit()
+	mk1VnetInit()
+
+	exec.Command("ip", "-a", "neighbor", "flush", "all").Run()
+
+	return vnet.Run(&in)
+}
+
+func mk1Ready() {
+	mk1.pubch <- "ready: true"
+}
+
+func mk1GoPub(pub *publisher.Publisher, pubch <-chan string) {
+	vnet.WG.Add(1)
+	defer vnet.WG.Done()
+	defer pub.Close()
+	for {
+		select {
+		case <-vnet.StopCh:
+			return
+		case s, ok := <-pubch:
+			if !ok {
+				return
 			}
+			pub.Print("vnet.", s)
 		}
-	}()
-
-	err = mk1.vnet.Run(&in)
-
-	begin := time.Now()
-	exerr := vnetmk1.PlatformExit(&mk1.vnet, &mk1.platform)
-	if err == nil {
-		err = exerr
 	}
-	dbgVnetd.Log("stopped in", time.Now().Sub(begin))
-
-	begin = time.Now()
-	xeth.Stop()
-	dbgVnetd.Log("xeth closeed in", time.Now().Sub(begin))
-
-	return err
 }
 
-func (mk1 *Mk1) Hset(args args.Hset, reply *reply.Hset) error {
-	field := strings.TrimPrefix(args.Field, "vnet.")
-	err := mk1.set(field, string(args.Value), false)
-	if err == nil {
-		*reply = 1
+func mk1GpioInit() error {
+	gpio := pca9535_main{
+		bus_index:   0,
+		bus_address: 0x74,
 	}
-	return err
+	if pc.EnableGpioLedOutput {
+		if err := gpio.do(gpio.led_output_enable); err != nil {
+			return err
+		}
+	}
+	if pc.EnableGpioSwitchReset {
+		if err := gpio.do(gpio.switch_reset); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (mk1 *Mk1) init() {
+func mk1OnieInit() {
+	// Alpha level board (version 0):
+	//   No lane remapping, but the MK1 front panel ports are flipped and 0-based.
+	// Beta & Production level boards have version 1 and above:
+	//   No lane remapping, but the MK1 front panel ports are flipped and 1-based.
+
+	vnet.RunInitHooks.Add(vnetonie.RunInit)
+	vnet.RunInitHooks.Add(func() {
+		if vnetonie.DeviceVersion == 0 {
+			pc.PortNumberOffset = 0
+		}
+	})
+}
+
+func mk1VnetInit() {
+	/* FIXME-XETH
+	v := &Mk1.vnet
+	p := &Mk1.platform
+	m4 := ip4.Init(v)
+	m6 := ip6.Init(v)
+	gre.Init(v)
+	ethernet.Init(v, m4, m6)
+	pci.Init(v)
+	pg.Init(v)
+	ipcli.Init(v)
+	unix.Init(v, unix.Config{RxInjectNodeName: "fe1-cpu"})
+
+	if true {
+		qsfpInit()
+	}
+
+	fe1.Init(v, p)
+	fe1a.RegisterDeviceIDs(v)
+	fe1.AddPlatform(v, p)
+
+	FIXME-XETH */
+}
+
+/* FIXME-XETH
+func mk1Init() {
 	const (
 		defaultPollInterval             = 5
 		defaultFastPollIntervalMilliSec = 200
 		defaultUnresolvedArpInterval    = 1
 	)
-	mk1.poller.mk1 = mk1
-	mk1.fastPoller.mk1 = mk1
-	mk1.unresolvedArper.mk1 = mk1
+	Mk1.poller.mk1 = mk1
+	Mk1.fastPoller.mk1 = mk1
+	Mk1.unresolvedArper.mk1 = mk1
 
-	mk1.poller.addEvent(0)
-	mk1.fastPoller.addEvent(0)
-	mk1.unresolvedArper.addEvent(0)
+	Mk1.poller.addEvent(0)
+	Mk1.fastPoller.addEvent(0)
+	Mk1.unresolvedArper.addEvent(0)
 
-	mk1.poller.pollInterval = defaultPollInterval
-	mk1.fastPoller.pollInterval = defaultFastPollIntervalMilliSec
-	mk1.unresolvedArper.pollInterval = defaultUnresolvedArpInterval
+	Mk1.poller.pollInterval = defaultPollInterval
+	Mk1.fastPoller.pollInterval = defaultFastPollIntervalMilliSec
+	Mk1.unresolvedArper.pollInterval = defaultUnresolvedArpInterval
 
-	mk1.fastPoller.hostname, _ = os.Hostname()
-	mk1.pubHwIfConfig()
-	mk1.set("ready", "true", true)
+	Mk1.fastPoller.hostname, _ = os.Hostname()
+	mk1PubHwIfConfig()
+	mk1Set("ready", "true", true)
 
-	mk1.poller.pubch <- fmt.Sprint("poll.max-channel-depth: ", chanDepth)
-	mk1.poller.pubch <- fmt.Sprint("pollInterval: ", defaultPollInterval)
-	mk1.poller.pubch <- fmt.Sprint("pollInterval.msec: ",
+	Mk1.poller.pubch <- fmt.Sprint("poll.max-channel-depth: ", chanDepth)
+	Mk1.poller.pubch <- fmt.Sprint("pollInterval: ", defaultPollInterval)
+	Mk1.poller.pubch <- fmt.Sprint("pollInterval.msec: ",
 		defaultFastPollIntervalMilliSec)
-	mk1.poller.pubch <- fmt.Sprint("kafka-broker: ", "")
-	mk1.poller.pubch <- fmt.Sprint("unresolved-arpInterval: ", defaultUnresolvedArpInterval)
+	Mk1.poller.pubch <- fmt.Sprint("kafka-broker: ", "")
+	Mk1.poller.pubch <- fmt.Sprint("unresolved-arpInterval: ", defaultUnresolvedArpInterval)
 }
 
-func (mk1 *Mk1) newEvent() interface{} {
-	return &event{
-		mk1:      mk1,
-		err:      make(chan error, 1),
-		newValue: make(chan string, 1),
-	}
-}
-
-func (mk1 *Mk1) hw_is_ok(hi vnet.Hi) bool {
-	h := mk1.vnet.HwIfer(hi)
-	hw := mk1.vnet.HwIf(hi)
-	if !hw.IsProvisioned() {
-		return false
-	}
-	return !mk1.unixInterfacesOnly || h.IsUnix()
-}
-
-func (mk1 *Mk1) sw_is_ok(si vnet.Si) bool {
-	h := mk1.vnet.HwIferForSupSi(si)
-	return h != nil && mk1.hw_is_ok(h.GetHwIf().Hi())
-}
-
-func (mk1 *Mk1) sw_if_add_del(v *vnet.Vnet, si vnet.Si, isDel bool) error {
-	mk1.sw_if_admin_up_down(v, si, false)
-	return nil
-}
-
-func (mk1 *Mk1) sw_if_admin_up_down(v *vnet.Vnet, si vnet.Si, isUp bool) error {
-	if mk1.sw_is_ok(si) {
-		mk1.poller.pubch <- fmt.Sprint(vnet.SiName{V: v, Si: si}, ".admin: ",
-			parse.Enable(isUp))
-	}
-	return nil
-}
-
-func (mk1 *Mk1) publish_link(hi vnet.Hi, isUp bool) {
-	mk1.poller.pubch <- fmt.Sprint(hi.Name(&mk1.vnet), ".link: ",
+func mk1PublishLink(hi vnet.Hi, isUp bool) {
+	Mk1.poller.pubch <- fmt.Sprint(hi.Name(&mk1.vnet), ".link: ",
 		parse.Enable(isUp))
 }
 
-func (mk1 *Mk1) hw_if_add_del(v *vnet.Vnet, hi vnet.Hi, isDel bool) error {
-	mk1.hw_if_link_up_down(v, hi, false)
-	return nil
-}
-
-func (mk1 *Mk1) hw_if_link_up_down(v *vnet.Vnet, hi vnet.Hi, isUp bool) error {
-	if mk1.hw_is_ok(hi) {
-		var flag uint8 = xeth.XETH_CARRIER_OFF
-		if isUp {
-			flag = xeth.XETH_CARRIER_ON
-		}
-		// Make sure interface is known to platina-mk1 driver
-		if _, found := vnet.Ports.GetPortByName(hi.Name(v)); found {
-			index := xeth.Interface.Named(hi.Name(v)).Ifinfo.Index
-			xeth.Carrier(index, flag)
-		}
-		mk1.publish_link(hi, isUp)
+func mk1HwIfLinkUpDown(v *vnet.Vnet, hi vnet.Hi, isUp bool) error {
+	if mk1HwIsOk(hi) {
+		hw := Mk1.vnet.HwIf(hi)
+		x := hw.X.(*mk1.X)
+		xeth.SetCarrier(x.Xid, isUp)
+		mk1PublishLink(hi, isUp)
 	}
 	return nil
 }
 
-func (mk1 *Mk1) parsePortConfig() (err error) {
-	plat := &mk1.platform
-	if false { // /etc/goes/portprovision
-		filename := "/etc/goes/portprovision"
-		source, err := ioutil.ReadFile(filename)
-		// If no file PortConfig will be left empty and lower layers will default
-		if err == nil {
-			err = yaml.Unmarshal(source, &plat.PortConfig)
-			if err != nil {
-				dbgSvi.Log(err)
-				panic(err)
-			}
-			for _, p := range plat.PortConfig.Ports {
-				dbgSvi.Log("Provision", p.Name,
-					"speed", p.Speed,
-					"lanes", p.Lanes,
-					"count", p.Count)
-			}
-		}
-	} else { // ethtool
-		// Massage ethtool port-provision format into fe1 format
-		var pp vnetfe1.PortProvision
-		vnet.Ports.Foreach(func(ifname string, entry *vnet.PortEntry) {
-			if entry.Devtype >= xeth.XETH_DEVTYPE_LINUX_UNKNOWN {
-				return
-			}
-			pp.Name = ifname
-			pp.Portindex = entry.Portindex
-			pp.Subportindex = entry.Subportindex
-			pp.PortVid = ethernet.VlanTag(entry.PortVid)
-			pp.PuntIndex = entry.PuntIndex
-			pp.Speed = fmt.Sprintf("%dg", entry.Speed/1000)
-			// Need some more help here from ethtool to disambiguate
-			// 40G 2-lane and 40G 4-lane
-			// 20G 2-lane and 20G 1-lane
-			// others?
-			dbgSvi.Logf("From ethtool: name %v entry %+v pp %+v",
-				ifname, entry, pp)
-			pp.Count = 1
-			switch entry.Speed {
-			case 100000, 40000:
-				pp.Lanes = 4
-			case 50000:
-				pp.Lanes = 2
-			case 25000, 20000, 10000, 1000:
-				pp.Lanes = 1
-			case 0: // need to calculate autoneg defaults
-				dbgSvi.Log("port-provision", pp.Name)
-				pp.Lanes =
-					mk1.getDefaultLanes(uint(pp.Portindex),
-						uint(pp.Subportindex))
-			}
-
-			// entry is what vnet sees; pp is what gets configured into fe1
-			// 2-lanes ports, e.g. 50g-ports, must start on subport index 0 or 2 in fe1
-			// Note number of subports per port can only be 1, 2, or 4; and first subport must start on subport index 0
-			if pp.Lanes == 2 {
-				switch entry.Subportindex {
-				case 0:
-					//OK
-				case 1:
-					//shift index for fe1
-					pp.Subportindex = 2
-				case 2:
-					//OK
-				default:
-					dbgVnetd.Log(ifname,
-						"has invalid subport index",
-						entry.Subportindex)
-
-				}
-			}
-
-			plat.PortConfig.Ports = append(plat.PortConfig.Ports, pp)
-		})
-	}
-	return
-}
-
-func (*Mk1) parseFibConfig(v *vnet.Vnet) (err error) {
-	// Process Interface addresses that have been learned from platina xeth driver
-	// ip4IfaddrMsg(msg.Prefix, isDel)
-	// Process Route data that have been learned from platina xeth driver
-	// Since TH/Fp-ports are not initialized what could these be?
-	//for _, fe := range vnet.FdbRoutes {
-	//ip4IfaddrMsg(fe.Address, fe.Mask, isDel)
-	//}
-	return
-}
-
-func (mk1 *Mk1) pubHwIfConfig() {
-	v := &mk1.vnet
-	if mk1.prevHwIfConfig == nil {
-		mk1.prevHwIfConfig = make(map[string]*hwIfConfig)
-	}
-	v.ForeachHwIf(mk1.unixInterfacesOnly, func(hi vnet.Hi) {
-		h := v.HwIf(hi)
-		ifname := hi.Name(v)
-		speed := h.Speed().String()
-		media := h.Media()
-		entry, found := mk1.prevHwIfConfig[ifname]
-		if !found {
-			entry = new(hwIfConfig)
-			mk1.prevHwIfConfig[ifname] = entry
-		}
-		if speed != mk1.prevHwIfConfig[ifname].speed {
-			s := fmt.Sprint(ifname, ".speed: ", speed)
-			mk1.prevHwIfConfig[ifname].speed = speed
-			mk1.poller.pubch <- s
-		}
-		if media != mk1.prevHwIfConfig[ifname].media {
-			s := fmt.Sprint(ifname, ".media: ", media)
-			mk1.prevHwIfConfig[ifname].media = media
-			mk1.poller.pubch <- s
-		}
-		if h, ok := v.HwIfer(hi).(ethernet.HwInterfacer); ok {
-			fec := h.GetInterface().ErrorCorrectionType.String()
-			if fec != mk1.prevHwIfConfig[ifname].fec {
-				s := fmt.Sprint(ifname, ".fec: ", fec)
-				mk1.prevHwIfConfig[ifname].fec = fec
-				mk1.poller.pubch <- s
-			}
-		}
-	})
-}
-
-func (mk1 *Mk1) set(key, value string, isReadyEvent bool) (err error) {
-	e := mk1.eventPool.Get().(*event)
-	e.key = key
-	e.value = value
-	e.isReadyEvent = isReadyEvent
-	mk1.vnet.SignalEvent(e)
-	if isReadyEvent {
-		return
-	}
-	if err = <-e.err; err == nil {
-		newValue := <-e.newValue
-		mk1.poller.pubch <- fmt.Sprint(e.key, ": ", newValue)
-	}
-	return
-}
-
-func (mk1 *Mk1) setup() error {
-	mk1.platform.Init = mk1.init
-
-	s, err := onie("device_version")
-	if err != nil {
-		return err
-	}
-	if _, err = fmt.Sscan(s, &mk1.platform.Version); err != nil {
-		return err
-	}
-	s, err = onie("num_macs")
-	if err != nil {
-		return err
-	}
-	if _, err = fmt.Sscan(s, &mk1.platform.NEthernetAddress); err != nil {
-		return err
-	}
-	s, err = onie("mac_base")
-	if err != nil {
-		return err
-	}
-	input := new(parse.Input)
-	input.SetString(s)
-	mk1.platform.BaseEthernetAddress.Parse(input)
-
-	fi, err := os.Stat("/sys/bus/pci/drivers/ixgbe")
-	mk1.platform.KernelIxgbe = err == nil && fi.IsDir()
-
-	mk1.unixInterfacesOnly = !mk1.platform.KernelIxgbe
-
-	// Default to using MSI versus INTX for switch chip.
-	mk1.platform.EnableMsiInterrupt = true
-
-	// Get initial port config from platina-mk1
-	mk1.parsePortConfig()
-
-	return vnetmk1.PlatformInit(&mk1.vnet, &mk1.platform)
-}
-
-func (*Mk1) getDefaultLanes(port, subport uint) (lanes uint) {
-	lanes = 1
-
-	// Two cases covered:
-	// * 4-lane
-	//         if first subport of port and only subport in set number of lanes should be 4
-	// * 2-lane
-	//         if first and third subports of port are present then number of lanes should be 2
-	//         Unfortunately, 2-lane autoneg doesn't work for TH but leave this code here
-	//         for possible future chipsets.
-	//
-
-	numSubports, _ := subportsMatchingPort(port)
-	switch numSubports {
-	case 1:
-		lanes = 4
-	case 2:
-		lanes = 2
-	case 4:
-		lanes = 1
-	default:
-		dbgVnetd.Log("port", port, "has invalid subports:",
-			numSubports)
-	}
-
-	return
-}
-
-func (mk1 *Mk1) gopublish() {
-	for s := range mk1.poller.pubch {
-		mk1.pub.Print("vnet.", s)
-	}
-}
-
-func (mk1 *Mk1) gopublishHf() {
+func mk1GoPublishHf() {
 	topic := "hf-counters"
-	for s := range mk1.fastPoller.pubch {
+	for s := range Mk1.fastPoller.pubch {
 		_ = s
 		_ = topic
-		/* FIXME
-		mk1.producer.ProduceChannel() <- &kafka.Message{
+		Mk1.producer.ProduceChannel() <- &kafka.Message{
 			TopicPartition: kafka.TopicPartition{
 				Topic:     &topic,
 				Partition: kafka.PartitionAny,
 			},
 			Value: []byte(s),
 		}
-		mk1.fastPoller.msgCount++
-		*/
+		Mk1.fastPoller.msgCount++
 	}
 }
 
-func (mk1 *Mk1) initProducer(broker string) {
-	/* FIXME
+func mk1InitProducer(broker string) {
 	var err error
-	if mk1.producer != nil {
-		mk1.producer.Close()
+	if Mk1.producer != nil {
+		Mk1.producer.Close()
 	}
-	mk1.producer, err = kafka.NewProducer(&kafka.ConfigMap{
+	Mk1.producer, err = kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers": broker,
 	})
 	if err != nil {
@@ -576,5 +256,5 @@ func (mk1 *Mk1) initProducer(broker string) {
 			}
 		}()
 	}
-	*/
 }
+FIXME-XETH */

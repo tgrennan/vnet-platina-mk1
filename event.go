@@ -2,6 +2,8 @@
 // Use of this source code is governed by the GPL-2 license described in the
 // LICENSE file.
 
+// +build ignore
+
 package main
 
 import (
@@ -14,7 +16,6 @@ import (
 
 type event struct {
 	vnet.Event
-	mk1          *Mk1
 	in           parse.Input
 	key, value   string
 	err          chan error
@@ -38,12 +39,12 @@ func (e *event) EventAction() {
 		addr   string
 	)
 	if e.isReadyEvent {
-		e.mk1.poller.pubch <- fmt.Sprint(e.key, ": ", e.value)
+		Mk1.poller.pubch <- fmt.Sprint(e.key, ": ", e.value)
 		return
 	}
 	e.in.Init(nil)
 	e.in.Add(e.key, e.value)
-	v := &e.mk1.vnet
+	v := &Mk1.vnet
 	switch {
 	case e.in.Parse("%v.speed %v", &hi, v, &bw):
 		{
@@ -91,7 +92,7 @@ func (e *event) EventAction() {
 		if itv < 1 {
 			e.err <- fmt.Errorf("pollInterval must be 1 second or longer")
 		} else {
-			e.mk1.poller.pollInterval = itv
+			Mk1.poller.pollInterval = itv
 			e.newValue <- fmt.Sprintf("%f", itv)
 			e.err <- nil
 		}
@@ -99,24 +100,24 @@ func (e *event) EventAction() {
 		if itv < 1 {
 			e.err <- fmt.Errorf("pollInterval.msec must be 1 millisecond or longer")
 		} else {
-			e.mk1.fastPoller.pollInterval = itv
+			Mk1.fastPoller.pollInterval = itv
 			e.newValue <- fmt.Sprintf("%f", itv)
 			e.err <- nil
 		}
 	case e.in.Parse("kafka-broker %s", &addr):
-		e.mk1.initProducer(addr)
+		Mk1.initProducer(addr)
 		e.newValue <- fmt.Sprintf("%s", addr)
 		e.err <- nil
 	case e.in.Parse("unresolved-arpInterval %f", &itv):
 		if itv < 1 {
 			e.err <- fmt.Errorf("unresolvedArpInterval must be 1 second or longer")
 		} else {
-			e.mk1.unresolvedArper.pollInterval = itv
+			Mk1.unresolvedArper.pollInterval = itv
 			e.newValue <- fmt.Sprintf("%f", itv)
 			e.err <- nil
 		}
 	default:
 		e.err <- fmt.Errorf("can't set %s to %v", e.key, e.value)
 	}
-	e.mk1.eventPool.Put(e)
+	Mk1.eventPool.Put(e)
 }

@@ -1,8 +1,6 @@
-// Created by gen-platina-mk1-stats -- DO NOT EDIT
-
 package main
 
-var stats = []string{
+var EthtoolStatNames = []string{
 	"mmu-multicast-tx-cos0-drop-bytes",
 	"mmu-multicast-tx-cos0-drop-packets",
 	"mmu-multicast-tx-cos1-drop-bytes",

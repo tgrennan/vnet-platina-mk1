@@ -2,6 +2,8 @@
 // Use of this source code is governed by the GPL-2 license described in the
 // LICENSE file.
 
+// +build ignore
+
 package main
 
 import (
@@ -16,13 +18,12 @@ import (
 
 type unresolvedArper struct {
 	vnet.Event
-	mk1          *Mk1
 	sequence     uint
 	pollInterval float64 // in seconds
 }
 
 func (p *unresolvedArper) addEvent(dt float64) {
-	p.mk1.vnet.SignalEventAfter(p, dt)
+	Mk1.vnet.SignalEventAfter(p, dt)
 }
 
 func (p *unresolvedArper) String() string {
@@ -31,7 +32,7 @@ func (p *unresolvedArper) String() string {
 
 func (p *unresolvedArper) EventAction() {
 	p.addEvent(p.pollInterval)
-	im4 := ip4.GetMain(&p.mk1.vnet)
+	im4 := ip4.GetMain(&Mk1.vnet)
 	im4.ForeachUnresolved(func(fi ip.FibIndex, p net.IPNet) {
 		xargs := []string{"ping", "-q", "-c", "1", "-W", "1", p.IP.String()}
 		netns := im4.FibNameForIndex(fi)

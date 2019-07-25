@@ -2,6 +2,8 @@
 // Use of this source code is governed by the GPL-2 license described in the
 // LICENSE file.
 
+// +build ignore
+
 package main
 
 import (
@@ -61,7 +63,6 @@ func (i *ifStatsPollerInterface) updateHf(counter string, value uint64) (delta u
 
 type ifStatsPoller struct {
 	vnet.Event
-	mk1          *Mk1
 	sequence     uint
 	hwInterfaces ifStatsPollerInterfaceVec
 	swInterfaces ifStatsPollerInterfaceVec
@@ -74,7 +75,7 @@ func (p *ifStatsPoller) publish(name, counter string, value uint64) {
 }
 
 func (p *ifStatsPoller) addEvent(dt float64) {
-	p.mk1.vnet.SignalEventAfter(p, dt)
+	Mk1.vnet.SignalEventAfter(p, dt)
 }
 
 func (p *ifStatsPoller) String() string {
@@ -91,7 +92,7 @@ func (p *ifStatsPoller) EventAction() {
 	s = fmt.Sprint("poll.start.channel-length: ", len(p.pubch))
 	p.pubch <- s
 
-	p.mk1.pubHwIfConfig()
+	Mk1.pubHwIfConfig()
 
 	// Publish all sw/hw interface counters even with zero values for first poll.
 	// This was all possible counters have valid values in redis.
@@ -112,16 +113,16 @@ func (p *ifStatsPoller) EventAction() {
 		}
 		p.publish(ifname, counter, value)
 	}
-	p.mk1.vnet.ForeachHwIfCounter(includeZeroCounters,
-		p.mk1.unixInterfacesOnly,
+	Mk1.vnet.ForeachHwIfCounter(includeZeroCounters,
+		Mk1.unixInterfacesOnly,
 		func(hi vnet.Hi, counter string, value uint64) {
 			p.hwInterfaces.Validate(uint(hi))
 			if p.hwInterfaces[hi].update(counter, value) && true {
-				pubcount(hi.Name(&p.mk1.vnet), counter, value)
+				pubcount(hi.Name(&Mk1.vnet), counter, value)
 			}
 		})
 
-	p.mk1.vnet.ForeachSwIfCounter(includeZeroCounters,
+	Mk1.vnet.ForeachSwIfCounter(includeZeroCounters,
 		func(si vnet.Si, siName, counter string, value uint64) {
 			p.swInterfaces.Validate(uint(si))
 			if p.swInterfaces[si].update(counter, value) && true {
@@ -133,9 +134,9 @@ func (p *ifStatsPoller) EventAction() {
 	p.pubch <- fmt.Sprint("poll.stop.time: ", stop.Format(time.StampMilli))
 	p.pubch <- fmt.Sprint("poll.stop.channel-length: ", len(p.pubch))
 
-	p.mk1.vnet.ForeachHwIf(false, func(hi vnet.Hi) {
-		h := p.mk1.vnet.HwIfer(hi)
-		hw := p.mk1.vnet.HwIf(hi)
+	Mk1.vnet.ForeachHwIf(false, func(hi vnet.Hi) {
+		h := Mk1.vnet.HwIfer(hi)
+		hw := Mk1.vnet.HwIf(hi)
 		// FIXME how to filter these in a better way?
 		if strings.Contains(hw.Name(), "fe1-") ||
 			strings.Contains(hw.Name(), "pg") ||
@@ -160,7 +161,6 @@ func (p *ifStatsPoller) EventAction() {
 
 type fastIfStatsPoller struct {
 	vnet.Event
-	mk1          *Mk1
 	sequence     uint
 	hwInterfaces ifStatsPollerInterfaceVec
 	swInterfaces ifStatsPollerInterfaceVec
@@ -177,7 +177,7 @@ func (p *fastIfStatsPoller) publish(data map[string]string) {
 }
 
 func (p *fastIfStatsPoller) addEvent(dt float64) {
-	p.mk1.vnet.SignalEventAfter(p, dt)
+	Mk1.vnet.SignalEventAfter(p, dt)
 }
 
 func (p *fastIfStatsPoller) String() string {
@@ -192,15 +192,15 @@ func (p *fastIfStatsPoller) EventAction() {
 	// This was all possible counters have valid values in redis.
 	// Otherwise only publish to redis when counter values change.
 	var c = make(map[string]string)
-	p.mk1.vnet.ForeachHighFreqHwIfCounter(true,
-		p.mk1.unixInterfacesOnly,
+	Mk1.vnet.ForeachHighFreqHwIfCounter(true,
+		Mk1.unixInterfacesOnly,
 		func(hi vnet.Hi, counter string, value uint64) {
-			ifname := hi.Name(&p.mk1.vnet)
+			ifname := hi.Name(&Mk1.vnet)
 			p.hwInterfaces.Validate(uint(hi))
 			delta, _ := p.hwInterfaces[hi].updateHf(counter, value)
 			c[ifname] = c[ifname] + fmt.Sprint(delta) + ","
 		})
-	//if p.mk1.producer != nil{
+	//if Mk1.producer != nil{
 	//	p.publish(c)
 	//}
 	p.sequence++
