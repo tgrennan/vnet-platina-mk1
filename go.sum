@@ -38,6 +38,8 @@ github.com/tgrennan/fe1 v0.0.0-20190725025725-161a12a2fca6 h1:XrmsFUxa09YkMdWD/w
 github.com/tgrennan/fe1 v0.0.0-20190725025725-161a12a2fca6/go.mod h1:LI1InsbmoU2kgBf1xQ9yWnOnsDBeDXENrjnpM1UMZKE=
 github.com/tgrennan/vnet v1.2.0-rc.1.0.20190725025127-54a00fd88dcf h1:Qaif4LXcBaohwllmnUYCnFOAHeDkx6JAmspU/JcJVbI=
 github.com/tgrennan/vnet v1.2.0-rc.1.0.20190725025127-54a00fd88dcf/go.mod h1:BWzOKqol5wy5KvwIFD8/TcNNC0/DsdH3MEr7jLBGXnE=
+github.com/tgrennan/vnet v1.2.0-rc.1.0.20190726011600-cd3a29a99343 h1:RcmKQCgJ4+Kz1oS8owT+30vRkSKTWNNcKwKYTSP7v8M=
+github.com/tgrennan/vnet v1.2.0-rc.1.0.20190726011600-cd3a29a99343/go.mod h1:BWzOKqol5wy5KvwIFD8/TcNNC0/DsdH3MEr7jLBGXnE=
 github.com/tgrennan/xeth v1.1.2-0.20190725024635-a91da8a05662 h1:eubTVHjRhtFoO+kci7SZjvXiQBe4jKCzW+8jKaZAiKo=
 github.com/tgrennan/xeth v1.1.2-0.20190725024635-a91da8a05662/go.mod h1:y1LhHdZ2Yccusaz++xe2nV75EMTjGTuwqV8xRozOfdo=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=

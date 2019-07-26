@@ -12,6 +12,7 @@ import (
 	"github.com/platinasystems/redis"
 	"github.com/platinasystems/redis/publisher"
 	"github.com/platinasystems/vnet"
+	"github.com/platinasystems/vnet/devices/bus/pci"
 	"github.com/platinasystems/vnet/devices/vnetonie"
 )
 
@@ -152,7 +153,11 @@ func mk1VnetInit() {
 	m6 := ip6.Init(v)
 	gre.Init(v)
 	ethernet.Init(v, m4, m6)
-	pci.Init(v)
+	FIXME-XETH */
+
+	pci.Init()
+
+	/* FIXME-XETH
 	pg.Init(v)
 	ipcli.Init(v)
 	unix.Init(v, unix.Config{RxInjectNodeName: "fe1-cpu"})
