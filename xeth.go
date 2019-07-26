@@ -253,6 +253,7 @@ func mk1InitFe1Attrs() {
 			portFe1Attrs := portFe1Xid.Attrs()
 			vlans := portFe1Attrs.Vlans()
 			portFe1Attrs.Vlans(append(vlans, fe1Xid))
+			fe1Attrs.Port(portFe1Attrs.Port())
 		}
 		return true
 	})
