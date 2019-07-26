@@ -82,25 +82,24 @@ func mk1Less(ixid, jxid xeth.Xid) bool {
 	//	...
 	//	xethlag[0:4094]
 	//	...
-	vidIsPort := func(vid uint16) bool {
-		return BottomPortVid <= vid && vid <= TopPortVid
-	}
-	ivid := uint16(ixid & xeth.VlanVidMask)
-	jvid := uint16(jxid & xeth.VlanVidMask)
-	ivlan := uint16(ixid / xeth.VlanNVid)
-	jvlan := uint16(jxid / xeth.VlanNVid)
-	iIsPort := vidIsPort(ivid)
-	jIsPort := vidIsPort(jvid)
-	if iIsPort {
-		if jIsPort {
-			if ivid == jvid {
-				return ivlan < jvlan
+	ife1xid := fe1xeth.Xid{ixid}
+	jfe1xid := fe1xeth.Xid{jxid}
+	ife1attrs := ife1xid.Attrs()
+	jfe1attrs := jfe1xid.Attrs()
+	iport := ife1attrs.Port()
+	jport := jfe1attrs.Port()
+	if iport >= 0 {
+		if jport >= 0 {
+			if iport == jport {
+				isubport := ife1attrs.SubPort()
+				jsubport := jfe1attrs.SubPort()
+				return isubport < jsubport
 			}
-			return ivid > jvid
+			return iport < jport
 		}
 		return true
 	}
-	if jIsPort {
+	if jport >= 0 {
 		return false
 	}
 	return ixid.Attrs().IfInfoName() < jxid.Attrs().IfInfoName()
@@ -174,7 +173,6 @@ func mk1InitFe1Attrs() {
 			subports := portFe1Attrs.SubPorts()
 			subports = append(subports, subFe1Xid)
 			portFe1Attrs.SubPorts(subports)
-			portFe1Attrs.SubPort(0)
 			mk1EthtoolFlags(subXid, subAttrs.EthtoolFlags())
 			ports = append(ports, subXid)
 		}
@@ -188,27 +186,34 @@ func mk1InitFe1Attrs() {
 		portFe1Attrs := portFe1Xid.Attrs()
 		portFe1Attrs.Bandwidth(vnet.Bandwidth(portSpeed * vnet.Mbps))
 		subports := portFe1Attrs.SubPorts()
-		var lanes int
+		var portlanes, sublanes int
+		var mask uint
 		switch portSpeed {
 		case 100000, 40000:
-			lanes = 4
+			portlanes = 4
+			subports = subports[:0]
+			portFe1Attrs.SubPorts(subports)
 		case 50000:
-			lanes = 2
+			portlanes = 2
+			sublanes = 2
 		case 25000, 20000, 10000, 1000:
-			lanes = 1
+			portlanes = 1
+			sublanes = 1
 		case 0:
 			switch len(subports) {
 			case 0:
-				lanes = 4
+				portlanes = 4
 			case 1:
-				lanes = 2
+				portlanes = 2
+				sublanes = 2
 			case 3:
-				lanes = 1
+				portlanes = 1
+				sublanes = 1
 			}
 		}
-		portFe1Attrs.Lanes(lanes)
-		portFe1Attrs.LaneMask((1 << uint(lanes)) - 1)
-		if len(subports) > 0 {
+		portFe1Attrs.Lanes(portlanes)
+		portFe1Attrs.LaneMask((1 << uint(portlanes)) - 1)
+		if sublanes > 0 && len(subports) > 0 {
 			if len(subports) == 1 {
 				// shift subport index of xeth*-1
 				subId := TopPortVid - NPorts - port
@@ -216,13 +221,17 @@ func mk1InitFe1Attrs() {
 				subFe1Xid := fe1xeth.Xid{subXid}
 				subFe1Attrs := subFe1Xid.Attrs()
 				subFe1Attrs.SubPort(2)
+				subFe1Attrs.Lanes(sublanes)
+				mask = ((1 << uint(sublanes)) - 1) << 2
+				subFe1Attrs.LaneMask(mask)
 			} else {
 				for i, subFe1Xid := range subports {
-					subi := i + 1
+					subi := uint(i + 1)
 					subFe1Attrs := subFe1Xid.Attrs()
-					mask := uint(((1 << uint(lanes)) - 1) <<
-						uint(subi))
+					mask = (1 << uint(sublanes)) - 1
+					mask <<= subi
 					subFe1Attrs.LaneMask(mask)
+					subFe1Attrs.Lanes(sublanes)
 					subAttrs := subFe1Xid.Xid.Attrs()
 					subSpeed := subAttrs.EthtoolSpeed()
 					subBW := vnet.Bandwidth(subSpeed)
