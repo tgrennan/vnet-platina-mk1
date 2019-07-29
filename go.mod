@@ -17,10 +17,10 @@ require (
 	gopkg.in/yaml.v2 v2.2.1
 )
 
-replace github.com/platinasystems/xeth => github.com/tgrennan/xeth v1.1.2-0.20190725024635-a91da8a05662
+replace github.com/platinasystems/xeth => github.com/tgrennan/xeth v1.1.2-0.20190729175040-2fa4f2ee8f84
 
-replace github.com/platinasystems/vnet => github.com/tgrennan/vnet v1.2.0-rc.1.0.20190726011600-cd3a29a99343
+replace github.com/platinasystems/vnet => github.com/tgrennan/vnet v1.2.0-rc.1.0.20190729175317-142778231287
 
 replace github.com/platinasystems/elib => github.com/tgrennan/elib v1.2.1-0.20190725024808-68c86557cdc4
 
-replace github.com/platinasystems/fe1 => github.com/tgrennan/fe1 v0.0.0-20190725025725-161a12a2fca6
+replace github.com/platinasystems/fe1 => github.com/tgrennan/fe1 v0.0.0-20190729175534-cfc896dea7ff

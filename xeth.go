@@ -13,7 +13,6 @@ import (
 
 	"github.com/platinasystems/fe1/fe1xeth"
 	"github.com/platinasystems/vnet"
-	"github.com/platinasystems/vnet/devices/vnetxeth"
 	"github.com/platinasystems/xeth"
 )
 
@@ -46,63 +45,8 @@ func mk1XethInit() {
 		mk1StatNames[i] = r.Replace(statName)
 	}
 	mk1LastStats = make(map[xeth.Xid][]uint64)
-	vnet.RunInitHooks.Add(vnetxeth.RunInit)
-	vnetxeth.AddRxMsgHook(mk1RxMsg)
-	vnetxeth.DetailAttr("bandwidth", fe1xeth.BandwidthAttr)
-	vnetxeth.DetailAttr("copper", fe1xeth.IsCrAttr)
-	vnetxeth.DetailAttr("fec74", fe1xeth.IsFec74Attr)
-	vnetxeth.DetailAttr("fec91", fe1xeth.IsFec91Attr)
-	vnetxeth.DetailAttr("backplane", fe1xeth.IsKrAttr)
-	vnetxeth.DetailAttr("lane-mask", fe1xeth.LaneMaskAttr)
-	vnetxeth.DetailAttr("lanes", fe1xeth.LanesAttr)
-	vnetxeth.DetailAttr("port", fe1xeth.PortAttr)
-	vnetxeth.DetailAttr("punt-index", fe1xeth.PuntIndexAttr)
-	vnetxeth.DetailAttr("subport", fe1xeth.SubPortAttr)
-	vnetxeth.DetailAttr("subports", fe1xeth.SubPortsAttr)
-	vnetxeth.DetailAttr("vlan", fe1xeth.VlanAttr)
-	vnetxeth.DetailAttr("vlans", fe1xeth.VlansAttr)
-	vnetxeth.Less = mk1Less
-}
-
-func mk1Less(ixid, jxid xeth.Xid) bool {
-	// this lists in this order,
-	//	xeth[1:32][-1]
-	//	xeth[1:32][-1].[1:4904]
-	//	...
-	//	xeth[1:32]-2
-	//	xeth[1:32]-2.[1:4904]
-	//	...
-	//	xeth[1:32]-3
-	//	xeth[1:32]-3.[1:4904]
-	//	...
-	//	xeth[1:32]-4
-	//	xeth[1:32]-4.[1:4904]
-	//	...
-	//	xethbr[0:4094]
-	//	...
-	//	xethlag[0:4094]
-	//	...
-	ife1xid := fe1xeth.Xid{ixid}
-	jfe1xid := fe1xeth.Xid{jxid}
-	ife1attrs := ife1xid.Attrs()
-	jfe1attrs := jfe1xid.Attrs()
-	iport := ife1attrs.Port()
-	jport := jfe1attrs.Port()
-	if iport >= 0 {
-		if jport >= 0 {
-			if iport == jport {
-				isubport := ife1attrs.SubPort()
-				jsubport := jfe1attrs.SubPort()
-				return isubport < jsubport
-			}
-			return iport < jport
-		}
-		return true
-	}
-	if jport >= 0 {
-		return false
-	}
-	return ixid.Attrs().IfInfoName() < jxid.Attrs().IfInfoName()
+	vnet.RunInitHooks.Add(fe1xeth.VnetRunInit)
+	fe1xeth.AddRxMsgHook(mk1RxMsg)
 }
 
 func mk1RxMsg(msg interface{}) {
